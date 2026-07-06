@@ -9,7 +9,6 @@ import Foundation
 
 struct Certification {
     let number: String
-    let issueDate: Date
-    let totalProducts: Int //ini disini ga yh
+    let issueDate: Date 
     let status: HalalStatus
 }

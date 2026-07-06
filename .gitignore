@@ -1,1 +1,12 @@
-env
+# Local environment / secrets
+.env
+
+# Swift build output
+.build/
+
+# macOS
+.DS_Store
+
+# Xcode user-specific settings
+**/xcuserdata/
+*.xcuserstate
