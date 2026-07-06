@@ -10,7 +10,7 @@ import CoreLocation
 
 struct FoodPlace: Identifiable {
     let id: String
-    let businessName: String
+    let businessName: String//
     let name: String
     let address: String
     let rating: Double?
@@ -22,3 +22,4 @@ struct FoodPlace: Identifiable {
     let imageName: String?
     let certification: Certification
 }
+
