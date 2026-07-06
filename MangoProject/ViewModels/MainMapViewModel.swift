@@ -120,6 +120,7 @@ private extension MainMapViewModel {
         do {
             return try await MKLocalSearch(request: request).start().mapItems
         } catch {
+            errorMessage = "Could not load nearby places. Please try again."
             return []
         }
     }
