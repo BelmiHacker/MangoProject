@@ -24,7 +24,7 @@ struct ProfileHeaderCard: View {
                         .font(.caption.weight(.semibold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Color.orange.gradient, in: Capsule())
+                        .background(Color.colorTag, in: Capsule())
                         .foregroundStyle(.white)
 
                     Text(expiryText)

@@ -5,7 +5,7 @@ struct StatCard: View {
     let icon: String
     let title: String
     let value: String
-    var iconColor: Color = .teal
+    var iconColor: Color = .colorButton
 
     var body: some View {
         VStack(spacing: 8) {
@@ -23,7 +23,8 @@ struct StatCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(Color(.colorButton).opacity(0.1), in: RoundedRectangle(cornerRadius: 16))
+        
     }
 }
 

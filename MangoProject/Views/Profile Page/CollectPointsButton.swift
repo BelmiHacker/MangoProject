@@ -11,7 +11,7 @@ struct CollectPointsButton: View {
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.borderedProminent)
-        .tint(.teal)
+        .tint(Color.colorButton)
         .controlSize(.large)
     }
 }

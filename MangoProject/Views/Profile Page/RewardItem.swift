@@ -8,7 +8,7 @@ struct RewardItem: View {
     var body: some View {
         VStack(spacing: 8) {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.orange.gradient)
+                .fill(Color.colorTag.gradient)
                 .frame(width: 56, height: 56)
                 .overlay {
                     Image(systemName: icon)
