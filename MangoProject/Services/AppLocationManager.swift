@@ -23,9 +23,11 @@ final class AppLocationManager: NSObject, ObservableObject {
 
         authorizationStatus = locationManager.authorizationStatus
         locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 10
-        locationManager.headingFilter = 5
+        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        locationManager.distanceFilter = kCLDistanceFilterNone
+        locationManager.headingFilter = 1
+        locationManager.activityType = .fitness
+        locationManager.pausesLocationUpdatesAutomatically = false
     }
 
     func requestAccessAndStart() {
@@ -43,10 +45,19 @@ final class AppLocationManager: NSObject, ObservableObject {
 
     func startUpdates() {
         locationManager.startUpdatingLocation()
+        locationManager.requestLocation()
 
         if CLLocationManager.headingAvailable() {
             locationManager.startUpdatingHeading()
         }
+    }
+
+    func requestCurrentLocation() {
+        guard authorizationStatus == .authorizedAlways || authorizationStatus == .authorizedWhenInUse else {
+            return
+        }
+
+        locationManager.requestLocation()
     }
 }
 
@@ -60,7 +71,16 @@ extension AppLocationManager: CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        location = locations.last
+        guard let latestLocation = locations.last else {
+            return
+        }
+
+        let locationAge = abs(latestLocation.timestamp.timeIntervalSinceNow)
+        guard locationAge < 10 else {
+            return
+        }
+
+        location = latestLocation
         errorMessage = nil
     }
 
@@ -69,6 +89,10 @@ extension AppLocationManager: CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        if let locationError = error as? CLError, locationError.code == .locationUnknown {
+            return
+        }
+
         errorMessage = error.localizedDescription
     }
 }

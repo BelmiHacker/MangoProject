@@ -73,7 +73,8 @@ struct MainMapPageView: View {
                     targetCategory: place.category,
                     targetLocationName: "Apple Maps",
                     targetAddressLines: place.addressLines,
-                    targetCoordinate: place.coordinate
+                    targetCoordinate: place.coordinate,
+                    locationManager: locationManager
                 )
             }
         }
