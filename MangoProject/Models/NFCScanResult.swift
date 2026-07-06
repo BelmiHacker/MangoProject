@@ -11,5 +11,5 @@ struct NFCScanResult {
     let foodPlaceId: String
     let scannedAt: Date
     let status: NFCScanStatus
-    let message: String?
+    let message: String?  
 }

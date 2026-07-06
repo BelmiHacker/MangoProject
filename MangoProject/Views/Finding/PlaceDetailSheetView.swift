@@ -204,46 +204,46 @@ struct CompactPlaceSheetView: View {
     var onClose: () -> Void = {}
 
     var body: some View {
-        VStack(spacing: 8) {
-            Capsule()
-                .fill(Color.white.opacity(0.28))
-                .frame(width: 58, height: 6)
+        ZStack(alignment: .topTrailing) {
+            VStack(spacing: 8) {
+                Capsule()
+                    .fill(Color(.systemGray3))
+                    .frame(width: 58, height: 6)
+                    .padding(.bottom, 2)
 
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("To \(state.name)")
-                        .font(.system(size: 27, weight: .bold))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.68)
+                Text("To \(state.name)")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.68)
+                    .padding(.horizontal, 64)
 
-                    Text("Distance  \(state.distanceText)")
-                        .font(.system(size: 19, weight: .regular))
-                        .foregroundStyle(.white.opacity(0.68))
-                }
-
-                Spacer()
-
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 22, weight: .medium))
-                        .foregroundStyle(.white)
-                        .frame(width: 48, height: 48)
-                        .background(Color.black.opacity(0.28))
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
+                Text("\(state.distanceText) remaining")
+                    .font(.system(size: 19, weight: .regular))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 12)
+            .padding(.bottom, 18)
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(Color(.systemGray))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 14)
+            .padding(.trailing, 14)
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 10)
-        .padding(.bottom, 14)
         .frame(maxWidth: .infinity)
-        .background(Color(red: 0.30, green: 0.30, blue: 0.28).opacity(0.92))
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .padding(.horizontal, 16)
-        .padding(.bottom, 12)
-        .preferredColorScheme(.dark)
+        .background(Color(.systemGray5).opacity(0.96))
+        .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
+        .padding(.horizontal, 0)
+        .padding(.bottom, 8)
     }
 }
 
