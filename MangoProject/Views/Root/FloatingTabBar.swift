@@ -58,7 +58,7 @@ private extension FloatingTabBar {
         Button(action: onSearchTap) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
         }
         .frame(width: 68, height: 68)
         .background {
