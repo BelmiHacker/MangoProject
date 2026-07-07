@@ -566,7 +566,10 @@ private extension FindingExperienceView {
     }
 
     func closeSheet() {
-        dismiss()
+        isPlaceSheetPresented = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            dismiss()
+        }
     }
 
     func bearingDegrees(
