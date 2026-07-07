@@ -19,11 +19,7 @@ struct FindingNavigationView: View {
             VStack(spacing: 0) {
                 instructionCard
 
-                Spacer(minLength: 20)
-
-                distanceMeter
-
-                Spacer(minLength: 20)
+                Spacer(minLength: 24)
 
                 directionDial
 
@@ -98,29 +94,6 @@ private extension FindingNavigationView {
         }
     }
 
-    var distanceMeter: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Distance remaining")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.white.opacity(0.5))
-
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(Color.white.opacity(0.12))
-                    .frame(height: 8)
-
-                GeometryReader { geometry in
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(Color.white.opacity(0.8))
-                        .frame(width: geometry.size.width * state.meterProgress, height: 8)
-                }
-                .frame(height: 8)
-            }
-            .animation(.easeInOut(duration: 0.08), value: state.meterProgress)
-        }
-        .padding(.horizontal, 4)
-    }
-
     var isAhead: Bool {
         state.directionFocusText == "ahead"
     }
@@ -189,8 +162,7 @@ private struct ProximityGlowView: View {
             instructionText: "Take the stairs",
             stepProgress: 0,
             stepCount: 6,
-            proximityProgress: 0.5,
-            meterProgress: 0.6
+            proximityProgress: 0.5
         )
     )
 }
