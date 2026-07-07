@@ -204,20 +204,36 @@ struct CompactPlaceSheetView: View {
     var onClose: () -> Void = {}
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text("To \(state.name)")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+        HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("To \(state.name)")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
 
-            Text(state.distanceText)
-                .font(.system(size: 17, weight: .regular))
-                .foregroundStyle(Color(white: 0.55))
-                .lineLimit(1)
+                Text(state.distanceText)
+                    .font(.system(size: 17, weight: .regular))
+                    .foregroundStyle(Color(white: 0.55))
+                    .lineLimit(1)
+            }
+            .padding(.leading, 22)
+
+            Spacer()
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(Color(white: 0.55))
+                    .frame(width: 28, height: 28)
+                    .background(Color(white: 0.32))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 16)
+            .accessibilityLabel("Exit navigation")
         }
-        .padding(.horizontal, 22)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
         .frame(height: 80)
         .background(Color(red: 0.20, green: 0.20, blue: 0.22))
         .clipShape(Capsule())
