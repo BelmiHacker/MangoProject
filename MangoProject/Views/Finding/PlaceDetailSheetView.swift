@@ -204,45 +204,24 @@ struct CompactPlaceSheetView: View {
     var onClose: () -> Void = {}
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            VStack(spacing: 8) {
-                Capsule()
-                    .fill(Color(.systemGray3))
-                    .frame(width: 58, height: 6)
-                    .padding(.bottom, 2)
+        VStack(alignment: .leading, spacing: 3) {
+            Text("To \(state.name)")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
 
-                Text("To \(state.name)")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.68)
-                    .padding(.horizontal, 64)
-
-                Text("\(state.distanceText) remaining")
-                    .font(.system(size: 19, weight: .regular))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.top, 12)
-            .padding(.bottom, 18)
-
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
-                    .background(Color(.systemGray))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 14)
-            .padding(.trailing, 14)
+            Text(state.distanceText)
+                .font(.system(size: 17, weight: .regular))
+                .foregroundStyle(Color(white: 0.55))
+                .lineLimit(1)
         }
-        .frame(maxWidth: .infinity)
-        .background(Color(.systemGray5).opacity(0.96))
-        .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
-        .padding(.horizontal, 0)
+        .padding(.horizontal, 22)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 80)
+        .background(Color(red: 0.20, green: 0.20, blue: 0.22))
+        .clipShape(Capsule())
+        .padding(.horizontal, 12)
         .padding(.bottom, 8)
     }
 }
