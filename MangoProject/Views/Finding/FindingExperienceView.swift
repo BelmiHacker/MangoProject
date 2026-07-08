@@ -55,7 +55,10 @@ struct FindingExperienceView: View {
     }
 
     private var findingState: FindingNavigationState {
-        FindingNavigationState(
+        let steps = navigationSteps.isEmpty
+            ? [NavigationStep(id: 0, instruction: instructionText, distanceText: displayedDistanceText, symbolName: "arrow.up")]
+            : navigationSteps
+        return FindingNavigationState(
             targetName: targetName,
             distanceText: displayedDistanceText,
             directionPrefixText: "to your",
@@ -64,8 +67,9 @@ struct FindingExperienceView: View {
             instructionDistanceText: displayedDistanceText,
             instructionText: instructionText,
             stepProgress: stepProgressIndex,
-            stepCount: 6,
-            proximityProgress: displayedProximityProgress
+            stepCount: steps.count,
+            proximityProgress: displayedProximityProgress,
+            steps: steps
         )
     }
 
@@ -296,12 +300,26 @@ private extension FindingExperienceView {
     }
 
     var stepProgressIndex: Int {
-        guard routeInstructions.count > 1, let currentIndex = currentRouteInstructionIndex else {
-            return 0
-        }
+        currentRouteInstructionIndex ?? 0
+    }
 
-        let progress = Double(currentIndex) / Double(max(routeInstructions.count - 1, 1))
-        return min(max(Int((progress * 5).rounded()), 0), 5)
+    var navigationSteps: [NavigationStep] {
+        routeInstructions.enumerated().map { index, instruction in
+            let distanceText: String
+            if instruction.distanceMeters >= 1000 {
+                distanceText = String(format: "%.1f km", instruction.distanceMeters / 1000)
+            } else if instruction.distanceMeters > 0 {
+                distanceText = "\(Int(instruction.distanceMeters.rounded())) m"
+            } else {
+                distanceText = displayedDistanceText
+            }
+            return NavigationStep(
+                id: index,
+                instruction: instruction.text,
+                distanceText: distanceText,
+                symbolName: NavigationStep.symbol(for: instruction.text)
+            )
+        }
     }
 
     var instructionText: String {
@@ -627,6 +645,7 @@ private struct RouteProjection {
 private struct RouteInstruction {
     let text: String
     let endCoordinate: CLLocationCoordinate2D?
+    let distanceMeters: CLLocationDistance
 }
 
 private struct RouteData {
@@ -647,7 +666,8 @@ private struct RouteData {
 
             return RouteInstruction(
                 text: trimmedInstruction,
-                endCoordinate: endCoordinate
+                endCoordinate: endCoordinate,
+                distanceMeters: step.distance
             )
         }
 
@@ -655,7 +675,8 @@ private struct RouteData {
             instructions = [
                 RouteInstruction(
                     text: "Head toward \(destinationName)",
-                    endCoordinate: coordinates.last
+                    endCoordinate: coordinates.last,
+                    distanceMeters: 0
                 )
             ]
         } else {
