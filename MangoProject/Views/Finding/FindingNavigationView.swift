@@ -2,8 +2,6 @@
 //  FindingNavigationView.swift
 //  MangoProject
 //
-//  Created by Belmiro Kayru on 04/07/26.
-//
 
 import SwiftUI
 
@@ -12,116 +10,159 @@ struct FindingNavigationView: View {
     var onClose: () -> Void = {}
     var onPlaySound: () -> Void = {}
 
+    @State private var selectedPage: Int = 0
+
     var body: some View {
         ZStack {
             background
 
             VStack(spacing: 0) {
-                instructionCard
+                instructionCarousel
 
-                Spacer(minLength: 48)
+                Spacer(minLength: 24)
 
                 directionDial
 
-                Spacer(minLength: 180)
+                Spacer(minLength: 120)
             }
             .padding(.horizontal, 18)
-            .padding(.top, 50)
+            .padding(.top, 12)
+        }
+        .onAppear {
+            selectedPage = state.stepProgress
+        }
+        .onChange(of: state.stepProgress) { _, newStep in
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                selectedPage = newStep
+            }
         }
     }
 }
 
 private extension FindingNavigationView {
     var background: some View {
-        Color(red: 0.96, green: 0.95, blue: 0.92)
+        LinearGradient(
+            colors: [
+                Color(red: 0.17, green: 0.18, blue: 0.16),
+                Color(red: 0.14, green: 0.13, blue: 0.09)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
         .ignoresSafeArea()
     }
 
-    var instructionCard: some View {
+    var instructionCarousel: some View {
+        VStack(spacing: 0) {
+            TabView(selection: $selectedPage) {
+                ForEach(state.steps) { step in
+                    stepPage(for: step)
+                        .tag(step.id)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 114)
+
+            HStack(spacing: 6) {
+                ForEach(state.steps) { step in
+                    Circle()
+                        .fill(step.id == selectedPage ? Color.white : Color.white.opacity(0.35))
+                        .frame(width: 7, height: 7)
+                        .animation(.easeInOut(duration: 0.2), value: selectedPage)
+                }
+            }
+            .padding(.vertical, 10)
+        }
+        .background(Color.black.opacity(0.82))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    @ViewBuilder
+    func stepPage(for step: NavigationStep) -> some View {
         HStack(spacing: 18) {
-            Image(systemName: "location.north.fill")
-                .font(.system(size: 58, weight: .bold))
+            Image(systemName: step.symbolName)
+                .font(.system(size: 56, weight: .black))
                 .foregroundStyle(.white)
-                .frame(width: 92)
+                .frame(width: 80)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(state.instructionDistanceText)
-                    .font(.system(size: 38, weight: .bold))
+                Text(step.distanceText)
+                    .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(.white)
-
-                Text(state.instructionText)
-                    .font(.system(size: 26, weight: .bold))
+                Text(step.instruction)
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.white.opacity(0.78))
-
-                progressDots
-                    .padding(.top, 4)
+                    .lineLimit(2)
             }
 
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 18)
-        .frame(maxWidth: .infinity)
-        .frame(height: 150)
-        .background(Color(red: 0.10, green: 0.10, blue: 0.10))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .padding(.vertical, 10)
     }
 
     var directionDial: some View {
-        DirectionDialView(angle: state.arrowAngle)
-            .frame(maxWidth: .infinity)
-            .accessibilityLabel("Direction arrow")
+        FindMyDirectionArrowView(
+            angle: state.arrowAngle,
+            proximityProgress: state.proximityProgress
+        )
+        .frame(maxWidth: .infinity)
+        .accessibilityLabel("Direction arrow")
     }
 
-    var progressDots: some View {
-        HStack {
-            ForEach(0..<state.stepCount, id: \.self) { index in
-                Circle()
-                    .fill(index == state.stepProgress ? Color.white : Color.white.opacity(0.5))
-                    .frame(width: 10, height: 10)
-            }
-        }
+    var isAhead: Bool {
+        state.directionFocusText == "ahead"
     }
 }
 
-private struct DirectionDialView: View {
+private struct FindMyDirectionArrowView: View {
     let angle: Double
+    let proximityProgress: Double
+
+    var body: some View {
+        ZStack {
+            ProximityGlowView(progress: proximityProgress)
+                .opacity(proximityProgress > 0 ? 1 : 0)
+
+            arrow
+        }
+        .frame(height: 360)
+        .animation(.spring(response: 0.5, dampingFraction: 0.82), value: angle)
+        .animation(.easeInOut(duration: 0.3), value: proximityProgress)
+    }
+
+    var arrow: some View {
+        Image(systemName: "arrow.up")
+            .font(.system(size: 185, weight: .black))
+            .foregroundStyle(.white)
+            .rotationEffect(.degrees(angle + 90))
+            .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+    }
+}
+
+private struct ProximityGlowView: View {
+    let progress: Double
+
+    private var normalizedProgress: Double {
+        min(max(progress, 0), 1)
+    }
 
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color(red: 0.87, green: 0.87, blue: 0.87))
+                .fill(Color.green.opacity(0.12 + normalizedProgress * 0.18))
+                .frame(width: 180 + normalizedProgress * 150, height: 180 + normalizedProgress * 150)
+                .blur(radius: 22)
 
             Circle()
-                .stroke(Color(red: 0.37, green: 0.37, blue: 0.37), lineWidth: 34)
+                .fill(Color.green.opacity(0.12 + normalizedProgress * 0.26))
+                .frame(width: 92 + normalizedProgress * 92, height: 92 + normalizedProgress * 92)
+                .blur(radius: 8)
 
             Circle()
-                .stroke(Color(red: 0.70, green: 0.70, blue: 0.70), lineWidth: 26)
-                .padding(42)
-
-            Image(systemName: "arrow.right")
-                .font(.system(size: 160, weight: .heavy))
-                .foregroundStyle(Color(red: 0.08, green: 0.08, blue: 0.08))
-                .rotationEffect(.degrees(angle))
+                .stroke(Color.green.opacity(0.22 + normalizedProgress * 0.38), lineWidth: 2)
+                .frame(width: 120 + normalizedProgress * 110, height: 120 + normalizedProgress * 110)
         }
-        .frame(width: 300, height: 300)
-        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: angle)
-    }
-}
-
-private struct CircleControlButton: View {
-    let systemImage: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 34, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 88, height: 88)
-                .background(Color.white.opacity(0.18))
-                .clipShape(Circle())
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -134,9 +175,15 @@ private struct CircleControlButton: View {
             directionFocusText: "right",
             arrowAngle: -45,
             instructionDistanceText: "20 m",
-            instructionText: "Take the stairs",
+            instructionText: "Head south on Jalan BSD Raya Utama",
             stepProgress: 0,
-            stepCount: 6
+            stepCount: 3,
+            proximityProgress: 0.5,
+            steps: [
+                NavigationStep(id: 0, instruction: "Head south on Jalan BSD Raya Utama", distanceText: "85 m", symbolName: "arrow.up"),
+                NavigationStep(id: 1, instruction: "Turn left on Jalan Pahlawan Seribu", distanceText: "200 m", symbolName: "arrow.turn.up.left"),
+                NavigationStep(id: 2, instruction: "Arrive at Tamper Coffee", distanceText: "10 m", symbolName: "mappin.circle.fill")
+            ]
         )
     )
 }

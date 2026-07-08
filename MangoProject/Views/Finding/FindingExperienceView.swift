@@ -7,9 +7,12 @@
 
 import Combine
 import CoreLocation
+import MapKit
 import SwiftUI
 
 struct FindingExperienceView: View {
+    @Environment(\.dismiss) private var dismiss
+
     let targetName: String
     let targetDistanceText: String
     let targetCategory: String
@@ -17,15 +20,21 @@ struct FindingExperienceView: View {
     let targetAddressLines: [String]
     let targetCoordinate: CLLocationCoordinate2D?
 
-    private let compactDetent = PresentationDetent.height(128)
+    private let compactDetent = PresentationDetent.height(104)
     private let mediumDetent = PresentationDetent.fraction(0.52)
 
-    @StateObject private var locationManager = AppLocationManager()
+    @ObservedObject private var locationManager: AppLocationManager
     @State private var isPlaceSheetPresented = true
-    @State private var placeSheetDetent: PresentationDetent = .height(128)
-    @State private var simulatedStepProgress = 0
+    @State private var placeSheetDetent: PresentationDetent = .height(104)
+    @State private var displayedDistanceMeters: CLLocationDistance?
+    @State private var routeCoordinates: [CLLocationCoordinate2D] = []
+    @State private var routeInstructions: [RouteInstruction] = []
+    @State private var routeOrigin: CLLocationCoordinate2D?
+    @State private var isLoadingRoute = false
+    @State private var lastRouteAttemptDate: Date?
+    @State private var lastRouteAttemptOrigin: CLLocationCoordinate2D?
 
-    private let movementTimer = Timer.publish(every: 1.4, on: .main, in: .common).autoconnect()
+    private let distanceSmoothingTimer = Timer.publish(every: 0.08, on: .main, in: .common).autoconnect()
 
     init(
         targetName: String = "Tamper Coffee",
@@ -33,7 +42,8 @@ struct FindingExperienceView: View {
         targetCategory: String = "Coffee Shop",
         targetLocationName: String = "The Breeze",
         targetAddressLines: [String] = ["Sampora", "Tangerang", "Banten", "Indonesia"],
-        targetCoordinate: CLLocationCoordinate2D? = nil
+        targetCoordinate: CLLocationCoordinate2D? = nil,
+        locationManager: AppLocationManager = AppLocationManager()
     ) {
         self.targetName = targetName
         self.targetDistanceText = targetDistanceText
@@ -41,19 +51,25 @@ struct FindingExperienceView: View {
         self.targetLocationName = targetLocationName
         self.targetAddressLines = targetAddressLines
         self.targetCoordinate = targetCoordinate
+        self.locationManager = locationManager
     }
 
     private var findingState: FindingNavigationState {
-        FindingNavigationState(
+        let steps = navigationSteps.isEmpty
+            ? [NavigationStep(id: 0, instruction: instructionText, distanceText: displayedDistanceText, symbolName: "arrow.up")]
+            : navigationSteps
+        return FindingNavigationState(
             targetName: targetName,
-            distanceText: liveDistanceText,
+            distanceText: displayedDistanceText,
             directionPrefixText: "to your",
             directionFocusText: directionFocusText,
             arrowAngle: arrowDisplayAngle,
-            instructionDistanceText: liveDistanceText,
+            instructionDistanceText: displayedDistanceText,
             instructionText: instructionText,
-            stepProgress: simulatedStepProgress,
-            stepCount: 6
+            stepProgress: stepProgressIndex,
+            stepCount: steps.count,
+            proximityProgress: displayedProximityProgress,
+            steps: steps
         )
     }
 
@@ -66,7 +82,7 @@ struct FindingExperienceView: View {
             websiteText: "instagram.com/tampercoffeejkt",
             hoursStatus: "Open",
             hoursText: "07.00 - 22.00",
-            distanceText: liveDistanceText,
+            distanceText: displayedDistanceText,
             addressLines: targetAddressLines
         )
     }
@@ -75,10 +91,17 @@ struct FindingExperienceView: View {
         FindingNavigationView(state: findingState)
             .onAppear {
                 locationManager.requestAccessAndStart()
+                initializeDisplayedDistance()
+                refreshRouteIfNeeded(for: userLocation, force: true)
             }
-            .onReceive(movementTimer) { _ in
-                updateProgress()
+            .onReceive(locationManager.$location) { location in
+                refreshRouteIfNeeded(for: location)
             }
+            .onReceive(distanceSmoothingTimer) { _ in
+                updateDisplayedDistance()
+            }
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $isPlaceSheetPresented) {
                 sheetContent
                     .presentationDetents([compactDetent, mediumDetent, .large], selection: $placeSheetDetent)
@@ -130,24 +153,123 @@ private extension FindingExperienceView {
             return targetDistanceText
         }
 
-        if liveDistanceMeters >= 1_000 {
-            return String(format: "%.1f km", liveDistanceMeters / 1_000)
+        return formattedDistanceText(from: liveDistanceMeters)
+    }
+
+    var displayedDistanceText: String {
+        guard let displayedDistanceMeters else {
+            return liveDistanceText
         }
 
-        return "\(Int(liveDistanceMeters.rounded())) m"
+        return formattedDistanceText(from: displayedDistanceMeters)
+    }
+
+    var fallbackDistanceMeters: CLLocationDistance? {
+        let lowercasedText = targetDistanceText.lowercased()
+        let numericText = lowercasedText.filter { character in
+            character.isNumber || character == "." || character == ","
+        }
+        .replacingOccurrences(of: ",", with: ".")
+
+        guard let value = Double(numericText) else {
+            return nil
+        }
+
+        if lowercasedText.contains("km") {
+            return value * 1_000
+        }
+
+        return value
+    }
+
+    var targetDisplayDistanceMeters: CLLocationDistance? {
+        liveDistanceMeters ?? fallbackDistanceMeters
+    }
+
+    var displayedProximityProgress: Double {
+        guard let distance = displayedDistanceMeters ?? liveDistanceMeters else {
+            return 0
+        }
+
+        let clampedDistance = min(max(distance, 0), 25)
+        return 1 - (clampedDistance / 25)
+    }
+
+    func formattedDistanceText(from distance: CLLocationDistance) -> String {
+        if distance >= 1_000 {
+            return String(format: "%.1f km", distance / 1_000)
+        }
+
+        return "\(Int(distance.rounded())) m"
+    }
+
+    var proximityProgress: Double {
+        guard let liveDistanceMeters else {
+            return 0
+        }
+
+        let clampedDistance = min(max(liveDistanceMeters, 0), 25)
+        return 1 - (clampedDistance / 25)
+    }
+
+    func initializeDisplayedDistance() {
+        guard displayedDistanceMeters == nil else {
+            return
+        }
+
+        displayedDistanceMeters = targetDisplayDistanceMeters
+    }
+
+    func updateDisplayedDistance() {
+        // Only smooth toward a live GPS reading.
+        // If GPS is temporarily unavailable, freeze the displayed value instead
+        // of drifting back toward the initial text distance (fallbackDistanceMeters),
+        // which caused the "stuck then sudden drop" behaviour.
+        guard let targetDistance = liveDistanceMeters else {
+            return
+        }
+
+        guard let currentDistance = displayedDistanceMeters else {
+            displayedDistanceMeters = targetDistance
+            return
+        }
+
+        let delta = targetDistance - currentDistance
+
+        guard abs(delta) > 1 else {
+            displayedDistanceMeters = targetDistance
+            return
+        }
+
+        displayedDistanceMeters = currentDistance + (delta > 0 ? 1 : -1)
     }
 
     var relativeBearing: Double? {
         guard
-            let userCoordinate = userLocation?.coordinate,
-            let targetCoordinate,
+            let destinationBearing,
             let headingDegrees
         else {
             return nil
         }
 
-        let targetBearing = bearingDegrees(from: userCoordinate, to: targetCoordinate)
-        return normalizedDegrees(targetBearing - headingDegrees)
+        return normalizedDegrees(destinationBearing - headingDegrees)
+    }
+
+    var destinationBearing: Double? {
+        guard let userCoordinate = userLocation?.coordinate else {
+            return nil
+        }
+
+        if routeCoordinates.count > 1,
+           let routeBearing = routeBearing(from: userCoordinate) {
+            return routeBearing
+        }
+
+        guard let targetCoordinate else {
+            return nil
+        }
+
+        return bearingDegrees(from: userCoordinate, to: targetCoordinate)
     }
 
     var arrowDisplayAngle: Double {
@@ -177,25 +299,282 @@ private extension FindingExperienceView {
         }
     }
 
+    var stepProgressIndex: Int {
+        currentRouteInstructionIndex ?? 0
+    }
+
+    var navigationSteps: [NavigationStep] {
+        routeInstructions.enumerated().map { index, instruction in
+            let distanceText: String
+            if instruction.distanceMeters >= 1000 {
+                distanceText = String(format: "%.1f km", instruction.distanceMeters / 1000)
+            } else if instruction.distanceMeters > 0 {
+                distanceText = "\(Int(instruction.distanceMeters.rounded())) m"
+            } else {
+                distanceText = displayedDistanceText
+            }
+            return NavigationStep(
+                id: index,
+                instruction: instruction.text,
+                distanceText: distanceText,
+                symbolName: NavigationStep.symbol(for: instruction.text)
+            )
+        }
+    }
+
     var instructionText: String {
         guard targetCoordinate != nil else {
             return "Finding target"
         }
 
-        if headingDegrees == nil {
-            return "Move your iPhone to calibrate"
+        if let routeInstructionText {
+            return routeInstructionText
         }
 
-        switch directionFocusText {
-        case "ahead":
-            return "Keep going straight"
-        case "behind":
-            return "Turn around"
-        case "right":
-            return "Move to your right"
-        default:
-            return "Move to your left"
+        if isLoadingRoute {
+            return "Finding walking route"
         }
+
+        if headingDegrees == nil {
+            return "Calibrating compass"
+        }
+
+        return "Head toward \(targetName)"
+    }
+
+    var routeInstructionText: String? {
+        guard
+            let currentRouteInstructionIndex,
+            routeInstructions.indices.contains(currentRouteInstructionIndex)
+        else {
+            return nil
+        }
+
+        return routeInstructions[currentRouteInstructionIndex].text
+    }
+
+    var currentRouteInstructionIndex: Int? {
+        guard let userLocation, !routeInstructions.isEmpty else {
+            return nil
+        }
+
+        for (index, instruction) in routeInstructions.enumerated() {
+            guard let coordinate = instruction.endCoordinate else {
+                continue
+            }
+
+            let stepEndLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            if userLocation.distance(from: stepEndLocation) > 12 {
+                return index
+            }
+        }
+
+        return routeInstructions.indices.last
+    }
+
+    func refreshRouteIfNeeded(for location: CLLocation?, force: Bool = false) {
+        guard let origin = location?.coordinate, targetCoordinate != nil else {
+            return
+        }
+
+        guard force || shouldRefreshRoute(from: origin) else {
+            return
+        }
+
+        Task {
+            await loadRoute(from: origin)
+        }
+    }
+
+    func shouldRefreshRoute(from coordinate: CLLocationCoordinate2D) -> Bool {
+        guard !isLoadingRoute else {
+            return false
+        }
+
+        if routeCoordinates.count < 2 {
+            return canAttemptRoute(from: coordinate)
+        }
+
+        guard let routeOrigin else {
+            return true
+        }
+
+        let movedFromOrigin = CLLocation(latitude: routeOrigin.latitude, longitude: routeOrigin.longitude)
+            .distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+
+        guard movedFromOrigin >= 80 else {
+            return false
+        }
+
+        if let projection = closestRouteProjection(to: coordinate),
+           projection.distanceMeters <= 35 {
+            return false
+        }
+
+        return canAttemptRoute(from: coordinate)
+    }
+
+    func canAttemptRoute(from coordinate: CLLocationCoordinate2D) -> Bool {
+        guard let lastRouteAttemptDate, let lastRouteAttemptOrigin else {
+            return true
+        }
+
+        let secondsSinceLastAttempt = Date().timeIntervalSince(lastRouteAttemptDate)
+        let movedSinceLastAttempt = CLLocation(latitude: lastRouteAttemptOrigin.latitude, longitude: lastRouteAttemptOrigin.longitude)
+            .distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+
+        return secondsSinceLastAttempt >= 20 || movedSinceLastAttempt >= 25
+    }
+
+    @MainActor
+    func loadRoute(from origin: CLLocationCoordinate2D) async {
+        guard let targetCoordinate, !isLoadingRoute else {
+            return
+        }
+
+        isLoadingRoute = true
+        lastRouteAttemptDate = Date()
+        lastRouteAttemptOrigin = origin
+
+        do {
+            let routeData = try await calculateRoute(from: origin, to: targetCoordinate)
+            routeCoordinates = routeData.coordinates
+            routeInstructions = routeData.instructions
+            routeOrigin = origin
+        } catch {
+            routeCoordinates = []
+            routeInstructions = []
+            routeOrigin = nil
+        }
+
+        isLoadingRoute = false
+    }
+
+    func calculateRoute(
+        from origin: CLLocationCoordinate2D,
+        to destinationCoordinate: CLLocationCoordinate2D
+    ) async throws -> RouteData {
+        do {
+            return try await calculateRoute(
+                from: origin,
+                to: destinationCoordinate,
+                transportType: .walking
+            )
+        } catch {
+            return try await calculateRoute(
+                from: origin,
+                to: destinationCoordinate,
+                transportType: .automobile
+            )
+        }
+    }
+
+    func calculateRoute(
+        from origin: CLLocationCoordinate2D,
+        to destinationCoordinate: CLLocationCoordinate2D,
+        transportType: MKDirectionsTransportType
+    ) async throws -> RouteData {
+        let request = MKDirections.Request()
+        if #available(iOS 26, *) {
+            request.source = MKMapItem(
+                location: CLLocation(latitude: origin.latitude, longitude: origin.longitude),
+                address: nil
+            )
+            request.destination = MKMapItem(
+                location: CLLocation(latitude: destinationCoordinate.latitude, longitude: destinationCoordinate.longitude),
+                address: nil
+            )
+        } else {
+            request.source = MKMapItem(placemark: MKPlacemark(coordinate: origin))
+            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destinationCoordinate))
+        }
+        request.transportType = transportType
+        request.requestsAlternateRoutes = false
+
+        let response = try await MKDirections(request: request).calculate()
+        guard let route = response.routes.min(by: { $0.expectedTravelTime < $1.expectedTravelTime }) else {
+            throw RouteError.noRoute
+        }
+
+        return RouteData(route: route, destinationName: targetName)
+    }
+
+    func routeBearing(from coordinate: CLLocationCoordinate2D) -> Double? {
+        guard let projection = closestRouteProjection(to: coordinate),
+              let lookaheadCoordinate = lookaheadCoordinate(from: projection) else {
+            return nil
+        }
+
+        return bearingDegrees(from: coordinate, to: lookaheadCoordinate)
+    }
+
+    func closestRouteProjection(to coordinate: CLLocationCoordinate2D) -> RouteProjection? {
+        guard routeCoordinates.count > 1 else {
+            return nil
+        }
+
+        let userPoint = MKMapPoint(coordinate)
+        var closestProjection: RouteProjection?
+
+        for index in 0..<(routeCoordinates.count - 1) {
+            let startPoint = MKMapPoint(routeCoordinates[index])
+            let endPoint = MKMapPoint(routeCoordinates[index + 1])
+            let deltaX = endPoint.x - startPoint.x
+            let deltaY = endPoint.y - startPoint.y
+            let segmentLengthSquared = deltaX * deltaX + deltaY * deltaY
+            guard segmentLengthSquared > 0 else {
+                continue
+            }
+
+            let rawFraction = ((userPoint.x - startPoint.x) * deltaX + (userPoint.y - startPoint.y) * deltaY)
+                / segmentLengthSquared
+            let fraction = min(1, max(0, rawFraction))
+            let projectedPoint = MKMapPoint(
+                x: startPoint.x + deltaX * fraction,
+                y: startPoint.y + deltaY * fraction
+            )
+            let distanceMeters = userPoint.distance(to: projectedPoint)
+
+            if closestProjection == nil || distanceMeters < (closestProjection?.distanceMeters ?? .infinity) {
+                closestProjection = RouteProjection(
+                    segmentIndex: index,
+                    point: projectedPoint,
+                    distanceMeters: distanceMeters
+                )
+            }
+        }
+
+        return closestProjection
+    }
+
+    func lookaheadCoordinate(
+        from projection: RouteProjection,
+        lookaheadMeters: CLLocationDistance = 12
+    ) -> CLLocationCoordinate2D? {
+        guard routeCoordinates.indices.contains(projection.segmentIndex + 1) else {
+            return routeCoordinates.last
+        }
+
+        var remainingLookahead = lookaheadMeters
+        var currentPoint = projection.point
+
+        for index in projection.segmentIndex..<(routeCoordinates.count - 1) {
+            let endPoint = MKMapPoint(routeCoordinates[index + 1])
+            let distanceToEnd = currentPoint.distance(to: endPoint)
+
+            if distanceToEnd >= remainingLookahead, distanceToEnd > 0 {
+                let fraction = remainingLookahead / distanceToEnd
+                return MKMapPoint(
+                    x: currentPoint.x + (endPoint.x - currentPoint.x) * fraction,
+                    y: currentPoint.y + (endPoint.y - currentPoint.y) * fraction
+                ).coordinate
+            }
+
+            remainingLookahead -= distanceToEnd
+            currentPoint = endPoint
+        }
+
+        return routeCoordinates.last
     }
 
     @ViewBuilder
@@ -217,10 +596,9 @@ private extension FindingExperienceView {
 
     func closeSheet() {
         isPlaceSheetPresented = false
-    }
-
-    func updateProgress() {
-        simulatedStepProgress = (simulatedStepProgress + 1) % 6
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            dismiss()
+        }
     }
 
     func bearingDegrees(
@@ -251,6 +629,73 @@ private extension FindingExperienceView {
         }
 
         return normalized
+    }
+}
+
+private enum RouteError: Error {
+    case noRoute
+}
+
+private struct RouteProjection {
+    let segmentIndex: Int
+    let point: MKMapPoint
+    let distanceMeters: CLLocationDistance
+}
+
+private struct RouteInstruction {
+    let text: String
+    let endCoordinate: CLLocationCoordinate2D?
+    let distanceMeters: CLLocationDistance
+}
+
+private struct RouteData {
+    let coordinates: [CLLocationCoordinate2D]
+    let instructions: [RouteInstruction]
+
+    init(route: MKRoute, destinationName: String) {
+        coordinates = route.polyline.routeCoordinates
+
+        let stepInstructions = route.steps.compactMap { step -> RouteInstruction? in
+            let trimmedInstruction = step.instructions.trimmingCharacters(in: .whitespacesAndNewlines)
+            let coordinates = step.polyline.routeCoordinates
+            let endCoordinate = coordinates.last
+
+            guard !trimmedInstruction.isEmpty else {
+                return nil
+            }
+
+            return RouteInstruction(
+                text: trimmedInstruction,
+                endCoordinate: endCoordinate,
+                distanceMeters: step.distance
+            )
+        }
+
+        if stepInstructions.isEmpty {
+            instructions = [
+                RouteInstruction(
+                    text: "Head toward \(destinationName)",
+                    endCoordinate: coordinates.last,
+                    distanceMeters: 0
+                )
+            ]
+        } else {
+            instructions = stepInstructions
+        }
+    }
+}
+
+private extension MKPolyline {
+    var routeCoordinates: [CLLocationCoordinate2D] {
+        var coordinates = Array(
+            repeating: CLLocationCoordinate2D(latitude: 0, longitude: 0),
+            count: pointCount
+        )
+        getCoordinates(
+            &coordinates,
+            range: NSRange(location: 0, length: pointCount)
+        )
+        return coordinates
     }
 }
 
