@@ -204,7 +204,12 @@ private extension MainMapPageView {
                         },
                         onNavigate: {
                             navigationPath.append(place)
-                        }
+                        },
+                        onSelectName: {
+                                    // Tulis logic atau *action* saat nama di-klik di sini,
+                                    // atau biarkan kosong `{}` dulu agar proyek lu bisa sukses compile.
+                                    print("Nama tempat diklik: \(place.name)")
+                                }
                     )
                     .id(place.id)
                 }

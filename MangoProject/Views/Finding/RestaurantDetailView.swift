@@ -30,7 +30,7 @@ struct RestaurantDetailView: View {
 
                         // Name
                         Text(place.name)
-                            .font(.title3.bold())
+                            .font(.title.bold())
                             .foregroundStyle(.primary)
 
                         // Rating
@@ -89,23 +89,8 @@ struct RestaurantDetailView: View {
             .scrollIndicators(.hidden)
             .ignoresSafeArea(.container, edges: [.top, .bottom])
         }
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .fontWeight(.semibold)
-                }
-                .glassEffect(in: .circle)
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                ShareLink(item: "Check out \(place.name) on Mango! \(place.url?.absoluteString ?? "")") {
-                    Image(systemName: "square.and.arrow.up")
-                        .fontWeight(.semibold)
-                }
-                .glassEffect(in: .circle)
-            }
+        .overlay(alignment: .top) {
+            floatingButtons
         }
         .onAppear { viewModel.loadDetails() }
     }
@@ -114,7 +99,51 @@ struct RestaurantDetailView: View {
 private extension RestaurantDetailView {
     // MARK: - Views
     
-    
+    private var floatingButtons: some View {
+        HStack {
+            Button(action: { dismiss() }) {
+                ZStack {
+                    if #available(iOS 26, *) {
+                        Circle()
+                            .fill(.clear)
+                            .glassEffect(in: Circle())
+                    } else {
+                        Circle()
+                            .fill(.ultraThinMaterial)
+                    }
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.primary)
+                }
+                .frame(width: 52, height: 52)
+            }
+            .buttonStyle(.plain)
+            .contentShape(Circle())
+            
+            Spacer()
+            
+            ShareLink(item: "Check out \(place.name) on Mango! \(place.url?.absoluteString ?? "")") {
+                ZStack {
+                    if #available(iOS 26, *) {
+                        Circle()
+                            .fill(.clear)
+                            .glassEffect(in: Circle())
+                    } else {
+                        Circle()
+                            .fill(.ultraThinMaterial)
+                    }
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.primary)
+                }
+                .frame(width: 52, height: 52)
+            }
+            .buttonStyle(.plain)
+            .contentShape(Circle())
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+    }
 
     var halalCertificateCard: some View {
         HStack(alignment: .center) {

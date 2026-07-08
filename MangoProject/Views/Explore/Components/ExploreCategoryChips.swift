@@ -8,7 +8,7 @@ import SwiftUI
 struct ExploreCategoryChips: View {
 
     let categories: [String]
-    let selected: String
+    let selectedCategories: Set<String>
     let onSelect: (String) -> Void
 
     private let accent = Color(red: 0.18, green: 0.42, blue: 0.35)
@@ -22,10 +22,10 @@ struct ExploreCategoryChips: View {
                             .font(.subheadline.weight(.medium))
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(selected == category ? accent : Color.primary.opacity(0.1))
-                            .foregroundStyle(selected == category ? .white : .primary)
+                            .background(selectedCategories.contains(category) ? accent : Color.primary.opacity(0.1))
+                            .foregroundStyle(selectedCategories.contains(category) ? .white : .primary)
                             .clipShape(Capsule())
-                            .animation(.spring(response: 0.28, dampingFraction: 0.7), value: selected)
+                            .animation(.spring(response: 0.28, dampingFraction: 0.7), value: selectedCategories.contains(category))
                     }
                     .buttonStyle(.plain)
                 }

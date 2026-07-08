@@ -15,6 +15,7 @@ struct ExplorePageView: View {
     @State private var isSheetPresented = false
     @State private var sheetDetent: PresentationDetent = .medium
     @State private var selectedPlace: NearbyFoodPlace?
+    @State private var detailedPlace: NearbyFoodPlace?
 
     private let regionRefreshTimer = Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
 
@@ -45,16 +46,20 @@ struct ExplorePageView: View {
         .sheet(isPresented: $isSheetPresented) {
             ExploreSheetContent(
                 searchText: $viewModel.searchText,
-                selectedCategory: $viewModel.selectedCategory,
+                selectedCategories: $viewModel.selectedCategories,
                 categories: viewModel.categories,
                 places: viewModel.filteredPlaces,
                 isSearching: viewModel.isSearching,
                 onSelectCategory: viewModel.selectCategory,
                 onClearSearch: viewModel.clearSearch,
-                onDirections: { selectedPlace = $0 }
+                onDirections: { selectedPlace = $0 },
+                onSelect: { detailedPlace = $0 }
             )
             .fullScreenCover(item: $selectedPlace) { place in
                 DirectionPageView(place: place, locationManager: viewModel.locationManager)
+            }
+            .fullScreenCover(item: $detailedPlace) { place in
+                RestaurantDetailView(place: place)
             }
             .interactiveDismissDisabled(true)
             .presentationDetents([.medium, .large], selection: $sheetDetent)
