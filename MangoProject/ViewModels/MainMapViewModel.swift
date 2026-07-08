@@ -46,7 +46,12 @@ final class MainMapViewModel: ObservableObject {
         let mapItems = await searchVisibleFoodPlaces(in: region)
 
         for item in mapItems {
-            let coordinate = item.placemark.coordinate
+            let coordinate: CLLocationCoordinate2D
+            if #available(iOS 26, *) {
+                coordinate = item.location.coordinate
+            } else {
+                coordinate = item.placemark.coordinate
+            }
             let itemLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
 
             guard centerLocation.distance(from: itemLocation) <= visibleRadius else {
@@ -206,8 +211,7 @@ private extension MainMapViewModel {
             "tea"
         ]
         let searchableText = [
-            mapItem.name,
-            mapItem.placemark.title
+            mapItem.name
         ]
             .compactMap { $0?.lowercased() }
             .joined(separator: " ")
@@ -252,7 +256,12 @@ private extension MainMapViewModel {
     }
 
     static func itemID(for item: MKMapItem) -> String {
-        let coordinate = item.placemark.coordinate
+        let coordinate: CLLocationCoordinate2D
+        if #available(iOS 26, *) {
+            coordinate = item.location.coordinate
+        } else {
+            coordinate = item.placemark.coordinate
+        }
 
         return [
             item.name ?? "Unknown",
