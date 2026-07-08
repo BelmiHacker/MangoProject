@@ -18,5 +18,4 @@ struct FindingNavigationState {
     let stepProgress: Int
     let stepCount: Int
     let proximityProgress: Double
-    let meterProgress: Double
 }

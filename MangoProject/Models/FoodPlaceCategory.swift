@@ -16,5 +16,5 @@ enum FoodPlaceCategory {
     case middleEastern
     case healthy
     case beverages
-    case sushi
+    case sushi 
 }

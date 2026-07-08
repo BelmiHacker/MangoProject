@@ -45,7 +45,6 @@ final class AppLocationManager: NSObject, ObservableObject {
 
     func startUpdates() {
         locationManager.startUpdatingLocation()
-        locationManager.requestLocation()
 
         if CLLocationManager.headingAvailable() {
             locationManager.startUpdatingHeading()
@@ -78,6 +77,25 @@ extension AppLocationManager: CLLocationManagerDelegate {
         let locationAge = abs(latestLocation.timestamp.timeIntervalSinceNow)
         guard locationAge < 10 else {
             return
+        }
+
+        // Reject readings with poor accuracy — this is the main cause of
+        // the distance jumping when GPS signal is weak. A reading with
+        // horizontalAccuracy > 80m means the coordinate could be off by
+        // up to 80m from the real position, which makes distance calculations
+        // wildly unreliable. We freeze the last good value instead.
+        guard latestLocation.horizontalAccuracy >= 0,
+              latestLocation.horizontalAccuracy <= 80 else {
+            return
+        }
+
+        // Only update if the new reading is meaningfully better or different
+        if let existing = location {
+            let isMoreAccurate = latestLocation.horizontalAccuracy < existing.horizontalAccuracy
+            let hasMoved = latestLocation.distance(from: existing) > 2
+            guard isMoreAccurate || hasMoved else {
+                return
+            }
         }
 
         location = latestLocation

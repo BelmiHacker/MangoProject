@@ -33,9 +33,7 @@ struct FindingExperienceView: View {
     @State private var isLoadingRoute = false
     @State private var lastRouteAttemptDate: Date?
     @State private var lastRouteAttemptOrigin: CLLocationCoordinate2D?
-    @State private var initialDistanceMeters: CLLocationDistance?
 
-    private let locationRefreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let distanceSmoothingTimer = Timer.publish(every: 0.08, on: .main, in: .common).autoconnect()
 
     init(
@@ -67,8 +65,7 @@ struct FindingExperienceView: View {
             instructionText: instructionText,
             stepProgress: stepProgressIndex,
             stepCount: 6,
-            proximityProgress: displayedProximityProgress,
-            meterProgress: meterProgress
+            proximityProgress: displayedProximityProgress
         )
     }
 
@@ -92,9 +89,6 @@ struct FindingExperienceView: View {
                 locationManager.requestAccessAndStart()
                 initializeDisplayedDistance()
                 refreshRouteIfNeeded(for: userLocation, force: true)
-            }
-            .onReceive(locationRefreshTimer) { _ in
-                locationManager.requestCurrentLocation()
             }
             .onReceive(locationManager.$location) { location in
                 refreshRouteIfNeeded(for: location)
@@ -220,23 +214,14 @@ private extension FindingExperienceView {
         }
 
         displayedDistanceMeters = targetDisplayDistanceMeters
-
-        if initialDistanceMeters == nil, let distance = targetDisplayDistanceMeters {
-            initialDistanceMeters = max(distance, 1)
-        }
-    }
-
-    var meterProgress: Double {
-        guard let initial = initialDistanceMeters, initial > 0 else {
-            return 1.0
-        }
-
-        let current = displayedDistanceMeters ?? liveDistanceMeters ?? initial
-        return min(max(current / initial, 0), 1)
     }
 
     func updateDisplayedDistance() {
-        guard let targetDistance = targetDisplayDistanceMeters else {
+        // Only smooth toward a live GPS reading.
+        // If GPS is temporarily unavailable, freeze the displayed value instead
+        // of drifting back toward the initial text distance (fallbackDistanceMeters),
+        // which caused the "stuck then sudden drop" behaviour.
+        guard let targetDistance = liveDistanceMeters else {
             return
         }
 
@@ -581,7 +566,10 @@ private extension FindingExperienceView {
     }
 
     func closeSheet() {
-        dismiss()
+        isPlaceSheetPresented = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            dismiss()
+        }
     }
 
     func bearingDegrees(

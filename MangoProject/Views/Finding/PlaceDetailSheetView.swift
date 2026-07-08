@@ -204,45 +204,58 @@ struct CompactPlaceSheetView: View {
     var onClose: () -> Void = {}
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            VStack(spacing: 8) {
-                Capsule()
-                    .fill(Color(.systemGray3))
-                    .frame(width: 58, height: 6)
-                    .padding(.bottom, 2)
+        VStack(spacing: 0) {
+            // Drag indicator
+            Capsule()
+                .fill(Color.primary.opacity(0.25))
+                .frame(width: 36, height: 5)
+                .padding(.top, 10)
+                .padding(.bottom, 8)
 
-                Text("To \(state.name)")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.68)
-                    .padding(.horizontal, 64)
+            HStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("To \(state.name)")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
 
-                Text("\(state.distanceText) remaining")
-                    .font(.system(size: 19, weight: .regular))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    Text(state.distanceText)
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                .padding(.leading, 22)
+
+                Spacer()
+
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
+                        .background(Color.primary.opacity(0.1))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, 16)
+                .accessibilityLabel("Exit navigation")
             }
-            .frame(maxWidth: .infinity)
-            .padding(.top, 12)
-            .padding(.bottom, 18)
-
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
-                    .background(Color(.systemGray))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 14)
-            .padding(.trailing, 14)
+            .padding(.bottom, 14)
         }
         .frame(maxWidth: .infinity)
-        .background(Color(.systemGray5).opacity(0.96))
-        .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
-        .padding(.horizontal, 0)
+        .background {
+            if #available(iOS 26, *) {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(.clear)
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+            } else {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .padding(.horizontal, 12)
         .padding(.bottom, 8)
     }
 }
