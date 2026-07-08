@@ -50,19 +50,31 @@ struct NearbyFoodPlace: Identifiable, Hashable {
 
 extension NearbyFoodPlace {
     init(mapItem: MKMapItem, userLocation: CLLocation?) {
-        let placemark = mapItem.placemark
-        let coordinate = placemark.coordinate
+        let coordinate: CLLocationCoordinate2D
+        let addressParts: [String]
+
+        if #available(iOS 26, *) {
+            coordinate = mapItem.location.coordinate
+            let fullAddr = mapItem.addressRepresentations?.fullAddress(includingRegion: true, singleLine: true)
+                ?? mapItem.address?.fullAddress
+                ?? ""
+            addressParts = fullAddr.isEmpty ? [] : [fullAddr]
+        } else {
+            let placemark = mapItem.placemark
+            coordinate = placemark.coordinate
+            addressParts = [
+                placemark.thoroughfare,
+                placemark.subThoroughfare,
+                placemark.locality,
+                placemark.administrativeArea,
+                placemark.country
+            ]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+        }
+
         let placeLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         let distance = userLocation?.distance(from: placeLocation)
-        let addressParts = [
-            placemark.thoroughfare,
-            placemark.subThoroughfare,
-            placemark.locality,
-            placemark.administrativeArea,
-            placemark.country
-        ]
-        .compactMap { $0 }
-        .filter { !$0.isEmpty }
 
         self.id = [
             mapItem.name ?? "Unknown",
