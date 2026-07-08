@@ -19,6 +19,11 @@ struct NearbyFoodPlace: Identifiable, Hashable {
     let url: URL?
     let distanceInMeters: CLLocationDistance?
     let mapItem: MKMapItem
+    let businessName: String?
+    let certificateNumber: String?
+    let certificateIssueDate: String?
+    let totalProducts: Int?
+    let isHalal: Bool
 
     var distanceText: String {
         guard let distanceInMeters else {
@@ -89,6 +94,11 @@ extension NearbyFoodPlace {
         self.url = mapItem.url
         self.distanceInMeters = distance
         self.mapItem = mapItem
+        self.businessName = nil
+        self.certificateNumber = nil
+        self.certificateIssueDate = nil
+        self.totalProducts = nil
+        self.isHalal = false
     }
 }
 

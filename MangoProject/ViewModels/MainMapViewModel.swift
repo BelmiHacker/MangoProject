@@ -41,32 +41,47 @@ final class MainMapViewModel: ObservableObject {
         isSearching = true
         errorMessage = nil
 
-        var mapItemsByID: [String: MKMapItem] = [:]
+        let csvPlaces = CSVDataLoader.loadAll().filter { $0.halalFound }
+        var nearbyPlaces: [NearbyFoodPlace] = []
 
-        let mapItems = await searchVisibleFoodPlaces(in: region)
-
-        for item in mapItems {
-            let coordinate: CLLocationCoordinate2D
-            if #available(iOS 26, *) {
-                coordinate = item.location.coordinate
-            } else {
-                coordinate = item.placemark.coordinate
-            }
-            let itemLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-
-            guard centerLocation.distance(from: itemLocation) <= visibleRadius else {
+        for p in csvPlaces {
+            guard p.latitude != 0.0 && p.longitude != 0.0 else {
                 continue
             }
 
-            let id = Self.itemID(for: item)
-            mapItemsByID[id] = item
+            let itemLocation = CLLocation(latitude: p.latitude, longitude: p.longitude)
+            let distance = userLocation?.distance(from: itemLocation)
+            
+            let centerDistance = centerLocation.distance(from: itemLocation)
+            guard centerDistance <= visibleRadius else {
+                continue
+            }
+
+            let coordinate = CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude)
+            let placemark = MKPlacemark(coordinate: coordinate)
+            let mapItem = MKMapItem(placemark: placemark)
+            mapItem.name = p.name
+
+            let foodPlace = NearbyFoodPlace(
+                id: "\(p.name)-\(p.latitude)-\(p.longitude)",
+                name: p.name,
+                address: "",
+                category: p.type.isEmpty ? "Food Place" : p.type,
+                coordinate: coordinate,
+                phoneNumber: nil,
+                url: nil,
+                distanceInMeters: distance,
+                mapItem: mapItem,
+                businessName: p.businessName.isEmpty ? nil : p.businessName,
+                certificateNumber: p.certificateNumber.isEmpty ? nil : p.certificateNumber,
+                certificateIssueDate: p.certificateIssueDate.isEmpty ? nil : p.certificateIssueDate,
+                totalProducts: p.totalProducts == 0 ? nil : p.totalProducts,
+                isHalal: p.halalFound
+            )
+            nearbyPlaces.append(foodPlace)
         }
 
-        places = mapItemsByID.values
-            .filter(isAllowedFoodPlace)
-            .map { NearbyFoodPlace(mapItem: $0, userLocation: userLocation) }
-            .sorted { ($0.distanceInMeters ?? Double.greatestFiniteMagnitude) < ($1.distanceInMeters ?? Double.greatestFiniteMagnitude) }
-
+        places = nearbyPlaces.sorted { ($0.distanceInMeters ?? Double.greatestFiniteMagnitude) < ($1.distanceInMeters ?? Double.greatestFiniteMagnitude) }
         isSearching = false
     }
 
