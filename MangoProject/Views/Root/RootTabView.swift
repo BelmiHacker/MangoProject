@@ -24,10 +24,10 @@ private extension RootTabView {
                 .allowsHitTesting(selectedTab == .home)
                 .accessibilityHidden(selectedTab != .home)
 
-            NavigationStack { ExplorePageView() }
-                .opacity(selectedTab == .explore ? 1 : 0)
-                .allowsHitTesting(selectedTab == .explore)
-                .accessibilityHidden(selectedTab != .explore)
+            if selectedTab == .explore {
+                NavigationStack { ExplorePageView() }
+                    .transition(.opacity)
+            }
 
             NavigationStack { FoodDNAPageView() }
                 .opacity(selectedTab == .foodDNA ? 1 : 0)
@@ -39,28 +39,11 @@ private extension RootTabView {
                 .allowsHitTesting(selectedTab == .points)
                 .accessibilityHidden(selectedTab != .points)
         }
+        .animation(.easeInOut(duration: 0.2), value: selectedTab)
     }
 }
 
 // MARK: - Placeholder pages (replace when feature pages are ready)
-
-struct ExplorePageView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "map.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("Explore")
-                .font(.title2.bold())
-            Text("Coming soon")
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .navigationBar)
-    }
-}
 
 struct FoodDNAPageView: View {
     var body: some View {

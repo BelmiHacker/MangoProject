@@ -20,9 +20,8 @@ struct FloatingTabBar: View {
         .padding(8)
         .background(Color(.systemBackground))
         .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.08), radius: 14, x: 0, y: 3)
+        .shadow(color: .black.opacity(0.10), radius: 16, x: 0, y: 4)
     }
-
 }
 
 // MARK: - Tab Item Button
