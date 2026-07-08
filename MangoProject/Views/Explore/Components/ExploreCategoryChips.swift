@@ -22,7 +22,7 @@ struct ExploreCategoryChips: View {
                             .font(.subheadline.weight(.medium))
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(selected == category ? accent : Color(.systemGray6))
+                            .background(selected == category ? accent : Color.primary.opacity(0.1))
                             .foregroundStyle(selected == category ? .white : .primary)
                             .clipShape(Capsule())
                             .animation(.spring(response: 0.28, dampingFraction: 0.7), value: selected)
