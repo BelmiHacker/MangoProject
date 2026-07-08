@@ -29,13 +29,14 @@ final class ExploreViewModel: ObservableObject {
     // MARK: - Internal State
 
     private(set) var mapRegion: MKCoordinateRegion
+    @Published private(set) var mapHeading: CLLocationDirection = 0
     private var hasCenteredOnUser = false
     private var cancellables = Set<AnyCancellable>()
 
     private static let defaultRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: -6.2088, longitude: 106.8456),
-        latitudinalMeters: 800,
-        longitudinalMeters: 800
+        latitudinalMeters: 300,
+        longitudinalMeters: 300
     )
 
     // MARK: - Derived Data
@@ -84,14 +85,15 @@ final class ExploreViewModel: ObservableObject {
 
     func onCameraChange(_ context: MapCameraUpdateContext) {
         mapRegion = context.region
+        mapHeading = context.camera.heading
     }
 
     func onLocationUpdate(_ newLocation: CLLocation) async {
         guard !hasCenteredOnUser else { return }
         let region = MKCoordinateRegion(
             center: newLocation.coordinate,
-            latitudinalMeters: 800,
-            longitudinalMeters: 800
+            latitudinalMeters: 300,
+            longitudinalMeters: 300
         )
         cameraPosition = .region(region)
         mapRegion = region

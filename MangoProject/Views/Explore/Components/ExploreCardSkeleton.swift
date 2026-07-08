@@ -29,7 +29,15 @@ struct ExploreCardSkeleton: View {
             }
         }
         .padding(16)
-        .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .background {
+            if #available(iOS 26, *) {
+                Color.clear
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+            } else {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.regularMaterial)
+            }
+        }
     }
 }

@@ -39,5 +39,16 @@ struct ExploreSheetContent: View {
                 onDirections: onDirections
             )
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .background {
+            if #available(iOS 26, *) {
+                Color.clear
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+            } else {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            }
+        }
     }
 }

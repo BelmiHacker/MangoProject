@@ -38,7 +38,14 @@ struct ExploreSearchBar: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Color(.systemGray6))
         .clipShape(RoundedRectangle(cornerRadius: 14))
+        .background {
+            if #available(iOS 26, *) {
+                Color.clear
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 14))
+            } else {
+                Color(.systemGray6)
+            }
+        }
     }
 }

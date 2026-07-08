@@ -25,7 +25,7 @@ private extension RootTabView {
                 .accessibilityHidden(selectedTab != .home)
 
             if selectedTab == .explore {
-                NavigationStack { ExplorePageView() }
+                NavigationStack { ExplorePageView(onBack: { selectedTab = .home }) }
                     .transition(.opacity)
             }
 

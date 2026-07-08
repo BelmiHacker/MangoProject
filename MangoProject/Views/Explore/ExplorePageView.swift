@@ -9,8 +9,11 @@ import SwiftUI
 
 struct ExplorePageView: View {
 
+    let onBack: () -> Void
+
     @StateObject private var viewModel = ExploreViewModel()
     @State private var isSheetPresented = false
+    @State private var sheetDetent: PresentationDetent = .medium
     @State private var selectedPlace: NearbyFoodPlace?
 
     private let regionRefreshTimer = Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
@@ -25,13 +28,20 @@ struct ExplorePageView: View {
             if let coord = viewModel.locationManager.location?.coordinate {
                 Annotation("", coordinate: coord, anchor: .center) {
                     UserHeadingMarker(headingDegrees: viewModel.headingDegrees)
+                        .rotationEffect(.degrees(-viewModel.mapHeading))
                         .allowsHitTesting(false)
                 }
             }
         }
-        .onMapCameraChange { viewModel.onCameraChange($0) }
+        .onMapCameraChange(frequency: .continuous) { viewModel.onCameraChange($0) }
         .ignoresSafeArea()
-        .onAppear { isSheetPresented = true }
+        .overlay {
+            backButtonOverlay
+        }
+        .onAppear {
+            isSheetPresented = true
+            viewModel.onAppear()
+        }
         .sheet(isPresented: $isSheetPresented) {
             ExploreSheetContent(
                 searchText: $viewModel.searchText,
@@ -44,9 +54,11 @@ struct ExplorePageView: View {
                 onDirections: { selectedPlace = $0 }
             )
             .interactiveDismissDisabled(true)
-            .presentationDetents([.medium, .large])
+            .presentationDetents([.medium, .large], selection: $sheetDetent)
             .presentationDragIndicator(.visible)
             .presentationBackgroundInteraction(.enabled)
+            .presentationBackground(.clear)
+            .presentationCornerRadius(28)
         }
         .fullScreenCover(item: $selectedPlace) { place in
             FindingExperienceView(
@@ -59,7 +71,6 @@ struct ExplorePageView: View {
                 locationManager: viewModel.locationManager
             )
         }
-        .onAppear { viewModel.onAppear() }
         .onReceive(viewModel.locationManager.$location.compactMap { $0 }) { location in
             Task { await viewModel.onLocationUpdate(location) }
         }
@@ -68,4 +79,37 @@ struct ExplorePageView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
     }
+
+    // MARK: - Back Button
+
+    private var backButtonOverlay: some View {
+        VStack {
+            HStack {
+                Button(action: onBack) {
+                    ZStack {
+                        if #available(iOS 26, *) {
+                            Circle()
+                                .fill(.clear)
+                                .glassEffect(in: Circle())
+                        } else {
+                            Circle()
+                                .fill(.ultraThinMaterial)
+                        }
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.primary)
+                    }
+                    .frame(width: 52, height: 52)
+                }
+                .buttonStyle(.plain)
+                .contentShape(Circle())
+                .padding(.leading, 16)
+                .padding(.top, 8)
+
+                Spacer()
+            }
+            Spacer()
+        }
+    }
+
 }

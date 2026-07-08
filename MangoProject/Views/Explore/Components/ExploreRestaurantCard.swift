@@ -22,9 +22,16 @@ struct ExploreRestaurantCard: View {
             photoStrip
         }
         .padding(16)
-        .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+        .background {
+            if #available(iOS 26, *) {
+                Color.clear
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+            } else {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.regularMaterial)
+            }
+        }
     }
 
     private var placeInfo: some View {
