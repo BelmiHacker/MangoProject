@@ -55,7 +55,6 @@ struct MainMapPageView: View {
                     let region = mapRegion(center: newLocation.coordinate, radius: 200)
                     mapRegion = region
                     hasCenteredOnUser = true
-
                     Task {
                         await viewModel.refreshPlaces(in: region, userLocation: newLocation)
                     }
