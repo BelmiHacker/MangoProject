@@ -8,13 +8,14 @@ import SwiftUI
 struct ExploreSheetContent: View {
 
     @Binding var searchText: String
-    @Binding var selectedCategory: String
+    @Binding var selectedCategories: Set<String>
     let categories: [String]
     let places: [NearbyFoodPlace]
     let isSearching: Bool
     let onSelectCategory: (String) -> Void
     let onClearSearch: () -> Void
     let onDirections: (NearbyFoodPlace) -> Void
+    let onSelect: (NearbyFoodPlace) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,13 +24,21 @@ struct ExploreSheetContent: View {
                 .padding(.top, 12)
                 .padding(.bottom, 10)
 
+            ExploreCategoryChips(
+                categories: categories,
+                selectedCategories: selectedCategories,
+                onSelect: onSelectCategory
+            )
+            .padding(.bottom, 12)
+
             Divider()
 
             ExplorePlacesList(
                 places: places,
                 isSearching: isSearching,
                 searchText: searchText,
-                onDirections: onDirections
+                onDirections: onDirections,
+                onSelect: onSelect
             )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
