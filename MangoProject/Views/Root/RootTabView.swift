@@ -26,7 +26,7 @@ private extension RootTabView {
                 .accessibilityHidden(selectedTab != .home || isSearchPresented)
 
             NavigationStack {
-                ProfileView()
+                Text("Profile — coming soon")
             }
             .opacity(selectedTab == .profile && !isSearchPresented ? 1 : 0)
             .allowsHitTesting(selectedTab == .profile && !isSearchPresented)

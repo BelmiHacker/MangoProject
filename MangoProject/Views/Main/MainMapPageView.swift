@@ -55,6 +55,7 @@ struct MainMapPageView: View {
                     let region = mapRegion(center: newLocation.coordinate, radius: 200)
                     mapRegion = region
                     hasCenteredOnUser = true
+
                     Task {
                         await viewModel.refreshPlaces(in: region, userLocation: newLocation)
                     }
@@ -72,8 +73,7 @@ struct MainMapPageView: View {
                     targetCategory: place.category,
                     targetLocationName: "Apple Maps",
                     targetAddressLines: place.addressLines,
-                    targetCoordinate: place.coordinate,
-                    locationManager: locationManager
+                    targetCoordinate: place.coordinate
                 )
             }
         }

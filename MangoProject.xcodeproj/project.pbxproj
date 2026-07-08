@@ -10,9 +10,28 @@
 		97445E7A2FF56CBF00DB148C /* MangoProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MangoProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C1E2FAB42FFEE20700961679 /* Exceptions for "MangoProject" folder in "MangoProject" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Views/Profile Page/CollectPointsButton.swift",
+				"Views/Profile Page/FeaturedCard.swift",
+				"Views/Profile Page/ProfileHeaderCard.swift",
+				"Views/Profile Page/ProfileView.swift",
+				"Views/Profile Page/RewardItem.swift",
+				"Views/Profile Page/RewardsSection.swift",
+				"Views/Profile Page/StatCard.swift",
+			);
+			target = 97445E792FF56CBF00DB148C /* MangoProject */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		97445E7C2FF56CBF00DB148C /* MangoProject */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C1E2FAB42FFEE20700961679 /* Exceptions for "MangoProject" folder in "MangoProject" target */,
+			);
 			path = MangoProject;
 			sourceTree = "<group>";
 		};
@@ -253,7 +272,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = V69WZY26LB;
+				DEVELOPMENT_TEAM = 7KCT3G9SVB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "HalalYuk uses your location to show nearby halal food places and guide you with GPS and compass.";
@@ -286,7 +305,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = V69WZY26LB;
+				DEVELOPMENT_TEAM = 7KCT3G9SVB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "HalalYuk uses your location to show nearby halal food places and guide you with GPS and compass.";
