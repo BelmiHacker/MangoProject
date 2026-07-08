@@ -53,23 +53,15 @@ struct ExplorePageView: View {
                 onClearSearch: viewModel.clearSearch,
                 onDirections: { selectedPlace = $0 }
             )
+            .fullScreenCover(item: $selectedPlace) { place in
+                DirectionPageView(place: place, locationManager: viewModel.locationManager)
+            }
             .interactiveDismissDisabled(true)
             .presentationDetents([.medium, .large], selection: $sheetDetent)
             .presentationDragIndicator(.visible)
             .presentationBackgroundInteraction(.enabled)
             .presentationBackground(.clear)
             .presentationCornerRadius(28)
-        }
-        .fullScreenCover(item: $selectedPlace) { place in
-            FindingExperienceView(
-                targetName: place.name,
-                targetDistanceText: place.distanceText,
-                targetCategory: place.category,
-                targetLocationName: "Apple Maps",
-                targetAddressLines: place.addressLines,
-                targetCoordinate: place.coordinate,
-                locationManager: viewModel.locationManager
-            )
         }
         .onReceive(viewModel.locationManager.$location.compactMap { $0 }) { location in
             Task { await viewModel.onLocationUpdate(location) }
