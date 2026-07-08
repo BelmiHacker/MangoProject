@@ -23,6 +23,11 @@ struct MainMapPageView: View {
         longitudinalMeters: 400
     )
     @State private var hasCenteredOnUser = false
+    @State private var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: -6.2088, longitude: 106.8456),
+        latitudinalMeters: 400,
+        longitudinalMeters: 400
+    ))
 
     private let regionRefreshTimer = Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
 
@@ -54,6 +59,7 @@ struct MainMapPageView: View {
                 if !hasCenteredOnUser {
                     let region = mapRegion(center: newLocation.coordinate, radius: 200)
                     mapRegion = region
+                    cameraPosition = .region(region)
                     hasCenteredOnUser = true
                     Task {
                         await viewModel.refreshPlaces(in: region, userLocation: newLocation)
@@ -114,18 +120,9 @@ private extension MainMapPageView {
 
     func mapCard(scrollProxy: ScrollViewProxy) -> some View {
         ZStack(alignment: .bottomTrailing) {
-            Map(
-                coordinateRegion: $mapRegion,
-                showsUserLocation: false,
-                annotationItems: mapAnnotations
-            ) { annotation in
-                MapAnnotation(coordinate: annotation.coordinate, anchorPoint: CGPoint(x: 0.5, y: 0.5)) {
-                    switch annotation {
-                    case .user(_, let headingDegrees):
-                        UserHeadingMarker(headingDegrees: headingDegrees)
-                            .accessibilityLabel("Your location and direction")
-                            .allowsHitTesting(false)
-                    case .place(let place):
+            Map(position: $cameraPosition) {
+                ForEach(viewModel.places) { place in
+                    Annotation("", coordinate: place.coordinate, anchor: .center) {
                         Button {
                             focus(place, scrollProxy: scrollProxy)
                         } label: {
@@ -135,13 +132,24 @@ private extension MainMapPageView {
                         .accessibilityLabel(place.name)
                     }
                 }
+                if let userCoord = locationManager.location?.coordinate {
+                    Annotation("", coordinate: userCoord, anchor: .center) {
+                        UserHeadingMarker(headingDegrees: headingDegrees)
+                            .accessibilityLabel("Your location and direction")
+                            .allowsHitTesting(false)
+                    }
+                }
+            }
+            .onMapCameraChange { context in
+                mapRegion = context.region
             }
             .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
 
             Button {
                 if let location = locationManager.location {
+                    let region = mapRegion(center: location.coordinate, radius: 200)
                     withAnimation(.easeInOut(duration: 0.45)) {
-                        mapRegion = mapRegion(center: location.coordinate, radius: 200)
+                        cameraPosition = .region(region)
                     }
                 }
             } label: {
@@ -222,16 +230,6 @@ private extension MainMapPageView {
         return "Compass heading: \(Int(headingDegrees.rounded())) degrees"
     }
 
-    var mapAnnotations: [MainMapAnnotation] {
-        var annotations = viewModel.places.map(MainMapAnnotation.place)
-
-        if let location = locationManager.location {
-            annotations.append(.user(location.coordinate, headingDegrees))
-        }
-
-        return annotations
-    }
-
     var headingDegrees: CLLocationDirection? {
         guard let heading = locationManager.heading else {
             return nil
@@ -258,10 +256,10 @@ private extension MainMapPageView {
         focusedPlaceID = place.id
 
         withAnimation(.easeInOut(duration: 0.35)) {
-            mapRegion = MKCoordinateRegion(
+            cameraPosition = .region(MKCoordinateRegion(
                 center: place.coordinate,
                 span: mapRegion.span
-            )
+            ))
         }
 
         if let scrollProxy {

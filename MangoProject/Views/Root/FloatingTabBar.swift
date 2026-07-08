@@ -20,37 +20,7 @@ struct FloatingTabBar: View {
         .padding(8)
         .background(Color(.systemBackground))
         .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.08), radius: 14, x: 0, y: 3)
-    }
-
-    var searchButton: some View {
-        Button(action: onSearchTap) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(.white)
-        }
-        .frame(width: 68, height: 68)
-        .background {
-            if #available(iOS 26, *) {
-                Circle()
-                    .fill(.clear)
-                    .glassEffect(in: Circle())
-            } else {
-                Circle()
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        Circle()
-                            .fill(Color.white.opacity(0.25))
-                    )
-                    .overlay(
-                        Circle()
-                            .strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5)
-                    )
-            }
-        }
-        .clipShape(Circle())
-        .shadow(color: .black.opacity(0.08), radius: 14, x: 0, y: 3)
-        .accessibilityLabel("Search")
+        .shadow(color: .black.opacity(0.10), radius: 16, x: 0, y: 4)
     }
 }
 
