@@ -12,6 +12,7 @@ struct ExploreSheetContent: View {
     let categories: [String]
     let places: [NearbyFoodPlace]
     let isSearching: Bool
+    var isCompact: Bool = false
     let onSelectCategory: (String) -> Void
     let onClearSearch: () -> Void
     let onDirections: (NearbyFoodPlace) -> Void
@@ -24,14 +25,17 @@ struct ExploreSheetContent: View {
                 .padding(.top, 12)
                 .padding(.bottom, 10)
 
-            ExploreCategoryChips(
-                categories: categories,
-                selectedCategories: selectedCategories,
-                onSelect: onSelectCategory
-            )
-            .padding(.bottom, 12)
+            if !isCompact {
+                ExploreCategoryChips(
+                    categories: categories,
+                    selectedCategories: selectedCategories,
+                    onSelect: onSelectCategory
+                )
+                .padding(.bottom, 12)
+                .transition(.opacity.combined(with: .move(edge: .top)))
 
-            Divider()
+                Divider()
+            }
 
             ExplorePlacesList(
                 places: places,
