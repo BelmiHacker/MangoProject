@@ -2,14 +2,12 @@
 //  MangoProject
 //  Created by Muthiara Putri Aliyu on 09/07/26.
 //
-//  Views/Main/Components
 //
 
 import SwiftUI
 
-/// "Recommended For You" section: header + vertical list of full-width
-/// restaurant cards. Purely presentational — MainView supplies the data
-/// and bookmark action; this view has no knowledge of where either comes from.
+/// "Recommended For You" section: header + vertical list of full-width restaurant cards. Purely presentational — MainView supplies the data and bookmark action; this view has no knowledge of where either comes from.
+
 struct RecommendedSectionView: View {
     let places: [RestaurantCardDisplayModel]
     var onBookmarkTapped: (RestaurantCardDisplayModel) -> Void = { _ in }
