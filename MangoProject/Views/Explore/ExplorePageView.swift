@@ -82,6 +82,7 @@ struct ExplorePageView: View {
                         categories: viewModel.categories,
                         places: viewModel.filteredPlaces,
                         isSearching: viewModel.isSearching,
+                        isCompact: sheetDetent == compactDetent,
                         onSelectCategory: viewModel.selectCategory,
                         onClearSearch: viewModel.clearSearch,
                         onDirections: { selectedPlace = $0 },
