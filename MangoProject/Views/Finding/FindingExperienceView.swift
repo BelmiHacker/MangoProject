@@ -457,8 +457,19 @@ private extension FindingExperienceView {
         transportType: MKDirectionsTransportType
     ) async throws -> RouteData {
         let request = MKDirections.Request()
-        request.source = MKMapItem(placemark: MKPlacemark(coordinate: origin))
-        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destinationCoordinate))
+        if #available(iOS 26, *) {
+            request.source = MKMapItem(
+                location: CLLocation(latitude: origin.latitude, longitude: origin.longitude),
+                address: nil
+            )
+            request.destination = MKMapItem(
+                location: CLLocation(latitude: destinationCoordinate.latitude, longitude: destinationCoordinate.longitude),
+                address: nil
+            )
+        } else {
+            request.source = MKMapItem(placemark: MKPlacemark(coordinate: origin))
+            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destinationCoordinate))
+        }
         request.transportType = transportType
         request.requestsAlternateRoutes = false
 

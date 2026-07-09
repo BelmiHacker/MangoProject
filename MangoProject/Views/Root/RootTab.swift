@@ -2,32 +2,34 @@ import Foundation
 
 enum RootTab: Hashable, CaseIterable {
     case home
-    case scan
-    case profile
+    case explore
+    case foodDNA
+    case points
 
     var label: String {
         switch self {
         case .home:    return "Home"
-        case .scan:    return "Scan"
-        case .profile: return "Profile"
+        case .explore: return "Explore"
+        case .foodDNA: return "Food DNA"
+        case .points:  return "Points"
         }
     }
 
-    // Unselected SF Symbol name
     var icon: String {
         switch self {
         case .home:    return "house"
-        case .scan:    return "doc.viewfinder"
-        case .profile: return "person.circle"
+        case .explore: return "map"
+        case .foodDNA: return "fork.knife"
+        case .points:  return "star"
         }
     }
 
-    // Selected SF Symbol name (filled variants where available)
     var selectedIcon: String {
         switch self {
         case .home:    return "house.fill"
-        case .scan:    return "doc.viewfinder"
-        case .profile: return "person.circle.fill"
+        case .explore: return "map.fill"
+        case .foodDNA: return "fork.knife"
+        case .points:  return "star.fill"
         }
     }
 }
