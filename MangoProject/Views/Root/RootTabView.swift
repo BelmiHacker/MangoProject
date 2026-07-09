@@ -19,7 +19,7 @@ struct RootTabView: View {
 private extension RootTabView {
     var tabContentStack: some View {
         ZStack {
-            MainMapPageView()
+            MainView()
                 .opacity(selectedTab == .home ? 1 : 0)
                 .allowsHitTesting(selectedTab == .home)
                 .accessibilityHidden(selectedTab != .home)
