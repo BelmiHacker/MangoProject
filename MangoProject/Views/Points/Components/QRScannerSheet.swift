@@ -50,7 +50,7 @@ struct QRScannerSheet: View {
                 .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())-
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
 }
 
