@@ -6,10 +6,12 @@ struct RootTabView: View {
     var body: some View {
         tabContentStack
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                FloatingTabBar(selectedTab: $selectedTab)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 8)
-                    .background(Color.clear)
+                if selectedTab != .explore {
+                    FloatingTabBar(selectedTab: $selectedTab)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
+                        .background(Color.clear)
+                }
             }
     }
 }
