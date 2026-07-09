@@ -65,24 +65,6 @@ struct FoodDNAPageView: View {
     }
 }
 
-struct PointsPageView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "star.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("Points")
-                .font(.title2.bold())
-            Text("Coming soon")
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
 // MARK: - Preview
 
 #Preview {
