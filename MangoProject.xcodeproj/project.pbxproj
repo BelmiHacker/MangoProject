@@ -256,6 +256,7 @@
 				DEVELOPMENT_TEAM = V69WZY26LB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "MangoProject uses the camera to scan QR codes at participating halal restaurants.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "HalalYuk uses your location to show nearby halal food places and guide you with GPS and compass.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -289,6 +290,7 @@
 				DEVELOPMENT_TEAM = V69WZY26LB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "MangoProject uses the camera to scan QR codes at participating halal restaurants.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "HalalYuk uses your location to show nearby halal food places and guide you with GPS and compass.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
