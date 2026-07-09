@@ -74,16 +74,16 @@ struct FindingExperienceView: View {
     }
 
     private var placeDetailState: FindingPlaceDetailState {
-        // Values mirror the Apple Maps screenshots used as the usability-testing reference.
         FindingPlaceDetailState(
             name: targetName,
             category: targetCategory,
             locationName: targetLocationName,
-            websiteText: "instagram.com/tampercoffeejkt",
+            websiteText: "",
             hoursStatus: "Open",
             hoursText: "07.00 - 22.00",
             distanceText: displayedDistanceText,
-            addressLines: targetAddressLines
+            addressLines: targetAddressLines,
+            routeSteps: navigationSteps
         )
     }
 
