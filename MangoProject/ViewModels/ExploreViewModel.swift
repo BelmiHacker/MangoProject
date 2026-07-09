@@ -114,4 +114,14 @@ final class ExploreViewModel: ObservableObject {
     func clearSearch() {
         searchText = ""
     }
+
+    func focusOn(place: NearbyFoodPlace) {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+            cameraPosition = .region(MKCoordinateRegion(
+                center: place.coordinate,
+                latitudinalMeters: 400,
+                longitudinalMeters: 400
+            ))
+        }
+    }
 }

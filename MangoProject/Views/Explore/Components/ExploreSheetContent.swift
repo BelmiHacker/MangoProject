@@ -23,13 +23,6 @@ struct ExploreSheetContent: View {
                 .padding(.top, 12)
                 .padding(.bottom, 10)
 
-            ExploreCategoryChips(
-                categories: categories,
-                selected: selectedCategory,
-                onSelect: onSelectCategory
-            )
-            .padding(.bottom, 12)
-
             Divider()
 
             ExplorePlacesList(
