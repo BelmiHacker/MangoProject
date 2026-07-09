@@ -8,20 +8,30 @@ import SwiftUI
 struct PlaceDetailSheetView: View {
     let state: FindingPlaceDetailState
     var onClose: () -> Void = {}
-    var onShare: () -> Void = {}
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: 0) {
                 dragHandle
                 header
-                foodPhotoCarousel
-                summaryRow
-                hoursSection
-                detailsSection
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+
+                Divider().overlay(Color.white.opacity(0.12))
+
+                infoSection
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 20)
+
+                if !state.routeSteps.isEmpty {
+                    Divider().overlay(Color.white.opacity(0.12))
+
+                    routeOverview
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
+                        .padding(.bottom, 34)
+                }
             }
-            .padding(.top, 12)
-            .padding(.bottom, 34)
         }
         .scrollIndicators(.hidden)
         .background(sheetBackground)
@@ -31,189 +41,145 @@ struct PlaceDetailSheetView: View {
 
 private extension PlaceDetailSheetView {
     var sheetBackground: some View {
-        RoundedRectangle(cornerRadius: 34, style: .continuous)
-            .fill(Color(red: 0.10, green: 0.10, blue: 0.11).opacity(0.94))
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .fill(Color(red: 0.10, green: 0.10, blue: 0.11).opacity(0.96))
     }
 
     var dragHandle: some View {
         Capsule()
-            .fill(Color.white.opacity(0.32))
-            .frame(width: 62, height: 6)
+            .fill(Color.white.opacity(0.28))
+            .frame(width: 40, height: 5)
+            .padding(.top, 10)
+            .padding(.bottom, 16)
     }
 
     var header: some View {
-        ZStack(alignment: .top) {
-            HStack {
-                CircleIconButton(systemImage: "square.and.arrow.up", action: onShare)
-                Spacer()
-                CircleIconButton(systemImage: "xmark", action: onClose)
-            }
-
-            VStack(spacing: 4) {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(state.name)
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.system(size: 26, weight: .bold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                    .minimumScaleFactor(0.75)
 
-                HStack(spacing: 4) {
-                    Text(state.category)
-                    Text("·")
-                    Text(state.locationName)
-                    Image(systemName: "chevron.right")
-                        .font(.caption.bold())
-                }
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.58))
-                .lineLimit(1)
+                Text(state.category)
+                    .font(.system(size: 15, weight: .regular))
+                    .foregroundStyle(.white.opacity(0.55))
             }
-            .padding(.horizontal, 68)
-            .padding(.top, 44)
-        }
-        .frame(minHeight: 98)
-        .padding(.horizontal, 20)
-    }
 
-    // MARK: - Food Photo Carousel
+            Spacer()
 
-    var foodPhotoCarousel: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(FoodPhotoPlaceholder.samples) { placeholder in
-                    FoodPhotoCard(placeholder: placeholder)
-                }
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .frame(width: 30, height: 30)
+                    .background(Color.white.opacity(0.12))
+                    .clipShape(Circle())
             }
-            .padding(.horizontal, 20)
-            .scrollTargetLayout()
+            .buttonStyle(.plain)
         }
-        .scrollTargetBehavior(.viewAligned)
-        .frame(height: 175)
     }
 
-    var summaryRow: some View {
-        HStack(spacing: 46) {
-            SummaryItem(title: "Hours", value: state.hoursStatus, valueColor: .green)
-            SummaryItem(title: "Distance", value: state.distanceText, valueColor: .white, systemImage: "point.topleft.down.curvedto.point.bottomright.up")
+    var infoSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            InfoRow(
+                icon: "clock.fill",
+                label: state.hoursStatus,
+                labelColor: .green,
+                detail: state.hoursText
+            )
+            InfoRow(
+                icon: "point.topleft.down.curvedto.point.bottomright.up",
+                label: "Distance",
+                labelColor: .white,
+                detail: state.distanceText
+            )
+            if !state.addressLines.isEmpty {
+                InfoRow(
+                    icon: "mappin.circle.fill",
+                    label: "Address",
+                    labelColor: .white,
+                    detail: state.addressLines.joined(separator: ", ")
+                )
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 20)
     }
 
-    var hoursSection: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("Hours")
-                .font(.system(size: 28, weight: .bold))
+    var routeOverview: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Route Overview")
+                .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(.white)
+                .padding(.bottom, 14)
 
-            HStack(alignment: .top) {
-                Text(state.hoursStatus)
-                    .foregroundStyle(.green)
-                Spacer()
-                Text(state.hoursText)
-                    .foregroundStyle(.white)
-            }
-            .font(.system(size: 22, weight: .regular))
+            ForEach(state.routeSteps) { step in
+                HStack(alignment: .top, spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white.opacity(0.10))
+                            .frame(width: 34, height: 34)
+                        Image(systemName: step.symbolName)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
 
-            Divider()
-                .overlay(Color.white.opacity(0.12))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(step.instruction)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.white)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if !step.distanceText.isEmpty {
+                            Text(step.distanceText)
+                                .font(.caption)
+                                .foregroundStyle(.white.opacity(0.48))
+                        }
+                    }
 
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Normal Hours")
-                        .foregroundStyle(.white.opacity(0.46))
-                    Text("Every Day")
-                        .foregroundStyle(.white)
+                    Spacer(minLength: 0)
                 }
-                Spacer()
-                Text(state.hoursText)
-                    .foregroundStyle(.white)
-                Image(systemName: "chevron.down")
-                    .font(.headline)
-                    .foregroundStyle(.white.opacity(0.34))
+                .padding(.vertical, 8)
+
+                if step.id != state.routeSteps.last?.id {
+                    Divider()
+                        .overlay(Color.white.opacity(0.08))
+                        .padding(.leading, 48)
+                }
             }
-            .font(.system(size: 22, weight: .regular))
         }
-        .padding(.horizontal, 20)
-    }
-
-    var detailsSection: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("Details")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(.white)
-
-            DetailRow(label: "Address", value: state.addressLines.joined(separator: "\n"), alignment: .trailing)
-        }
-        .padding(.horizontal, 20)
     }
 }
 
-// MARK: - Food Photo Placeholder Model
+// MARK: - Info Row
 
-private struct FoodPhotoPlaceholder: Identifiable {
-    let id: Int
+private struct InfoRow: View {
     let icon: String
-    let topColor: Color
-    let bottomColor: Color
     let label: String
-
-    static let samples: [FoodPhotoPlaceholder] = [
-        .init(id: 0, icon: "fork.knife",
-              topColor: Color(red: 0.83, green: 0.34, blue: 0.04),
-              bottomColor: Color(red: 0.55, green: 0.18, blue: 0.02),
-              label: "Main Course"),
-        .init(id: 1, icon: "cup.and.saucer.fill",
-              topColor: Color(red: 0.23, green: 0.42, blue: 0.26),
-              bottomColor: Color(red: 0.12, green: 0.24, blue: 0.14),
-              label: "Drinks"),
-        .init(id: 2, icon: "birthday.cake.fill",
-              topColor: Color(red: 0.55, green: 0.20, blue: 0.78),
-              bottomColor: Color(red: 0.30, green: 0.09, blue: 0.46),
-              label: "Desserts"),
-        .init(id: 3, icon: "takeoutbag.and.cup.straws.fill",
-              topColor: Color(red: 0.72, green: 0.12, blue: 0.12),
-              bottomColor: Color(red: 0.40, green: 0.06, blue: 0.06),
-              label: "Takeout"),
-        .init(id: 4, icon: "fish.fill",
-              topColor: Color(red: 0.11, green: 0.40, blue: 0.62),
-              bottomColor: Color(red: 0.06, green: 0.20, blue: 0.36),
-              label: "Seafood"),
-    ]
-}
-
-// MARK: - Food Photo Card
-
-private struct FoodPhotoCard: View {
-    let placeholder: FoodPhotoPlaceholder
+    let labelColor: Color
+    let detail: String
 
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [placeholder.topColor, placeholder.bottomColor],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.5))
+                .frame(width: 22)
 
-            VStack(spacing: 10) {
-                Image(systemName: placeholder.icon)
-                    .font(.system(size: 44, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.88))
+            Text(label)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(labelColor)
 
-                Text(placeholder.label)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.60))
-            }
+            Spacer()
+
+            Text(detail)
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(.white.opacity(0.75))
+                .multilineTextAlignment(.trailing)
         }
-        .frame(width: 155, height: 175)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
     }
 }
 
-// MARK: - Shared Sub-views
+// MARK: - Compact Sheet
 
 struct CompactPlaceSheetView: View {
     let state: FindingPlaceDetailState
@@ -275,83 +241,22 @@ struct CompactPlaceSheetView: View {
     }
 }
 
-private struct SummaryItem: View {
-    let title: String
-    let value: String
-    let valueColor: Color
-    var systemImage: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(.white.opacity(0.48))
-
-            HStack(spacing: 6) {
-                if let systemImage {
-                    Image(systemName: systemImage)
-                        .font(.system(size: 16, weight: .semibold))
-                }
-                Text(value)
-                    .font(.system(size: 22, weight: .regular))
-            }
-            .foregroundStyle(valueColor)
-        }
-    }
-}
-
-private struct DetailRow: View {
-    let label: String
-    let value: String
-    var valueColor: Color = .white
-    var alignment: TextAlignment = .leading
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 18) {
-            Text(label)
-                .font(.system(size: 21, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.48))
-            Spacer()
-            Text(value)
-                .font(.system(size: 21, weight: .regular))
-                .foregroundStyle(valueColor)
-                .multilineTextAlignment(alignment)
-        }
-    }
-}
-
-private struct CircleIconButton: View {
-    let systemImage: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 23, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 56, height: 56)
-                .background(Color.white.opacity(0.10))
-                .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
-                )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 #Preview {
     PlaceDetailSheetView(
         state: FindingPlaceDetailState(
             name: "Tamper Coffee",
             category: "Coffee Shop",
             locationName: "The Breeze",
-            websiteText: "instagram.com/tampercoffeejkt",
+            websiteText: "",
             hoursStatus: "Open",
             hoursText: "07.00 - 22.00",
             distanceText: "150 m",
-            addressLines: ["Sampora", "Tangerang", "Banten", "Indonesia"]
+            addressLines: ["Sampora", "Tangerang", "Banten"],
+            routeSteps: [
+                NavigationStep(id: 0, instruction: "Head south on Jalan BSD Raya Utama", distanceText: "85 m", symbolName: "arrow.up"),
+                NavigationStep(id: 1, instruction: "Turn left on Jalan Pahlawan Seribu", distanceText: "200 m", symbolName: "arrow.turn.up.left"),
+                NavigationStep(id: 2, instruction: "Arrive at Tamper Coffee", distanceText: "10 m", symbolName: "mappin.circle.fill")
+            ]
         )
     )
 }
