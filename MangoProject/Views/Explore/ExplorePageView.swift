@@ -15,14 +15,28 @@ struct ExplorePageView: View {
     @State private var isSheetPresented = false
     @State private var sheetDetent: PresentationDetent = .medium
     @State private var selectedPlace: NearbyFoodPlace?
+    @State private var detailedPlace: NearbyFoodPlace?
+    @State private var focusedPlace: NearbyFoodPlace?
 
     private let regionRefreshTimer = Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
+    private let focusedDetent = PresentationDetent.height(300)
+    private let compactDetent = PresentationDetent.height(80)
 
     var body: some View {
         Map(position: $viewModel.cameraPosition) {
             ForEach(viewModel.places) { place in
                 Annotation("", coordinate: place.coordinate, anchor: .center) {
-                    FoodMapPin(isFocused: false)
+                    FoodMapPin(isFocused: focusedPlace?.id == place.id)
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                if focusedPlace?.id == place.id {
+                                    focusedPlace = nil
+                                } else {
+                                    focusedPlace = place
+                                    viewModel.focusOn(place: place)
+                                }
+                            }
+                        }
                 }
             }
             if let coord = viewModel.locationManager.location?.coordinate {
@@ -42,23 +56,51 @@ struct ExplorePageView: View {
             isSheetPresented = true
             viewModel.onAppear()
         }
+        .onChange(of: focusedPlace) { _, newPlace in
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                sheetDetent = newPlace != nil ? focusedDetent : .medium
+            }
+        }
         .sheet(isPresented: $isSheetPresented) {
-            ExploreSheetContent(
-                searchText: $viewModel.searchText,
-                selectedCategory: $viewModel.selectedCategory,
-                categories: viewModel.categories,
-                places: viewModel.filteredPlaces,
-                isSearching: viewModel.isSearching,
-                onSelectCategory: viewModel.selectCategory,
-                onClearSearch: viewModel.clearSearch,
-                onDirections: { selectedPlace = $0 }
-            )
+            Group {
+                if let place = focusedPlace {
+                    ExplorePlaceCard(
+                        place: place,
+                        onClose: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                focusedPlace = nil
+                            }
+                        },
+                        onDirections: {
+                            selectedPlace = place
+                        }
+                    )
+                } else {
+                    ExploreSheetContent(
+                        searchText: $viewModel.searchText,
+                        selectedCategories: $viewModel.selectedCategories,
+                        categories: viewModel.categories,
+                        places: viewModel.filteredPlaces,
+                        isSearching: viewModel.isSearching,
+                        onSelectCategory: viewModel.selectCategory,
+                        onClearSearch: viewModel.clearSearch,
+                        onDirections: { selectedPlace = $0 },
+                        onSelect: { detailedPlace = $0 }
+                    )
+                }
+            }
             .fullScreenCover(item: $selectedPlace) { place in
                 DirectionPageView(place: place, locationManager: viewModel.locationManager)
             }
+            .fullScreenCover(item: $detailedPlace) { place in
+                RestaurantDetailView(place: place)
+            }
             .interactiveDismissDisabled(true)
-            .presentationDetents([.medium, .large], selection: $sheetDetent)
-            .presentationDragIndicator(.visible)
+            .presentationDetents(
+                focusedPlace != nil ? [focusedDetent] : [compactDetent, .medium, .large],
+                selection: $sheetDetent
+            )
+            .presentationDragIndicator(focusedPlace != nil ? .hidden : .visible)
             .presentationBackgroundInteraction(.enabled)
             .presentationBackground(.clear)
             .presentationCornerRadius(28)
@@ -103,5 +145,4 @@ struct ExplorePageView: View {
             Spacer()
         }
     }
-
 }

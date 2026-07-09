@@ -16,4 +16,5 @@ struct FindingPlaceDetailState {
     let hoursText: String
     let distanceText: String
     let addressLines: [String]
+    var routeSteps: [NavigationStep] = []
 }

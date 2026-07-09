@@ -14,16 +14,21 @@ struct FoodPlaceCard: View {
     let isFocused: Bool
     let onFocus: () -> Void
     let onNavigate: () -> Void
+    let onSelectName: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top, spacing: 14) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(place.name)
-                        .font(.system(size: 29, weight: .bold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.75)
+                    Button(action: onFocus) {
+                        Text(place.name)
+                            .font(.system(size: 29, weight: .bold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.75)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .buttonStyle(.plain)
 
                     Text(place.address.isEmpty ? place.category : place.address)
                         .font(.system(size: 18, weight: .semibold))
@@ -63,9 +68,8 @@ struct FoodPlaceCard: View {
                 }
                 .buttonStyle(.plain)
 
-                Button {
-                } label: {
-                    Image(systemName: "camera.viewfinder")
+                Button(action: onSelectName) {
+                    Image(systemName: "info.circle")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(.primary)
                     .frame(width: 56, height: 56)

@@ -6,10 +6,12 @@ struct RootTabView: View {
     var body: some View {
         tabContentStack
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                FloatingTabBar(selectedTab: $selectedTab)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 8)
-                    .background(Color.clear)
+                if selectedTab != .explore {
+                    FloatingTabBar(selectedTab: $selectedTab)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
+                        .background(Color.clear)
+                }
             }
     }
 }
@@ -19,7 +21,7 @@ struct RootTabView: View {
 private extension RootTabView {
     var tabContentStack: some View {
         ZStack {
-            MainMapPageView()
+            MainView()
                 .opacity(selectedTab == .home ? 1 : 0)
                 .allowsHitTesting(selectedTab == .home)
                 .accessibilityHidden(selectedTab != .home)
@@ -52,24 +54,6 @@ struct FoodDNAPageView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
             Text("Food DNA")
-                .font(.title2.bold())
-            Text("Coming soon")
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
-struct PointsPageView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "star.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("Points")
                 .font(.title2.bold())
             Text("Coming soon")
                 .foregroundStyle(.secondary)

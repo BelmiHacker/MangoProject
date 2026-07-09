@@ -10,12 +10,17 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
+enum NavigationDest: Hashable {
+    case finding(NearbyFoodPlace)
+    case detail(NearbyFoodPlace)
+}
+
 struct MainMapPageView: View {
     // MARK: - State
 
     @StateObject private var locationManager = AppLocationManager()
     @StateObject private var viewModel = MainMapViewModel()
-    @State private var navigationPath: [NearbyFoodPlace] = []
+    @State private var navigationPath: [NavigationDest] = []
     @State private var focusedPlaceID: NearbyFoodPlace.ID?
     @State private var mapRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: -6.2088, longitude: 106.8456),
@@ -23,11 +28,6 @@ struct MainMapPageView: View {
         longitudinalMeters: 400
     )
     @State private var hasCenteredOnUser = false
-    @State private var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: -6.2088, longitude: 106.8456),
-        latitudinalMeters: 400,
-        longitudinalMeters: 400
-    ))
 
     private let regionRefreshTimer = Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
 
@@ -37,13 +37,15 @@ struct MainMapPageView: View {
         NavigationStack(path: $navigationPath) {
             ScrollViewReader { scrollProxy in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 26) {
+                    VStack(alignment: .leading, spacing: 24) {
                         heroSection
+                            .padding(.horizontal, 20)
                         locationStatusCard
+                            .padding(.horizontal, 20)
                         mapCard(scrollProxy: scrollProxy)
+                            .padding(.horizontal, 20)
                         placesSection
                     }
-                    .padding(.horizontal, 20)
                     .padding(.top, 8)
                     .padding(.bottom, 36)
                 }
@@ -59,8 +61,8 @@ struct MainMapPageView: View {
                 if !hasCenteredOnUser {
                     let region = mapRegion(center: newLocation.coordinate, radius: 200)
                     mapRegion = region
-                    cameraPosition = .region(region)
                     hasCenteredOnUser = true
+
                     Task {
                         await viewModel.refreshPlaces(in: region, userLocation: newLocation)
                     }
@@ -71,16 +73,20 @@ struct MainMapPageView: View {
                     await viewModel.refreshPlaces(in: mapRegion, userLocation: locationManager.location)
                 }
             }
-            .navigationDestination(for: NearbyFoodPlace.self) { place in
-                FindingExperienceView(
-                    targetName: place.name,
-                    targetDistanceText: place.distanceText,
-                    targetCategory: place.category,
-                    targetLocationName: "Apple Maps",
-                    targetAddressLines: place.addressLines,
-                    targetCoordinate: place.coordinate,
-                    locationManager: locationManager
-                )
+            .navigationDestination(for: NavigationDest.self) { dest in
+                switch dest {
+                case .finding(let place):
+                    FindingExperienceView(
+                        targetName: place.name,
+                        targetDistanceText: place.distanceText,
+                        targetCategory: place.category,
+                        targetLocationName: "Apple Maps",
+                        targetAddressLines: place.addressLines,
+                        targetCoordinate: place.coordinate
+                    )
+                case .detail(let place):
+                    RestaurantDetailView(place: place)
+                }
             }
         }
     }
@@ -120,9 +126,18 @@ private extension MainMapPageView {
 
     func mapCard(scrollProxy: ScrollViewProxy) -> some View {
         ZStack(alignment: .bottomTrailing) {
-            Map(position: $cameraPosition) {
-                ForEach(viewModel.places) { place in
-                    Annotation("", coordinate: place.coordinate, anchor: .center) {
+            Map(
+                coordinateRegion: $mapRegion,
+                showsUserLocation: false,
+                annotationItems: mapAnnotations
+            ) { annotation in
+                MapAnnotation(coordinate: annotation.coordinate, anchorPoint: CGPoint(x: 0.5, y: 0.5)) {
+                    switch annotation {
+                    case .user(_, let headingDegrees):
+                        UserHeadingMarker(headingDegrees: headingDegrees)
+                            .accessibilityLabel("Your location and direction")
+                            .allowsHitTesting(false)
+                    case .place(let place):
                         Button {
                             focus(place, scrollProxy: scrollProxy)
                         } label: {
@@ -132,24 +147,13 @@ private extension MainMapPageView {
                         .accessibilityLabel(place.name)
                     }
                 }
-                if let userCoord = locationManager.location?.coordinate {
-                    Annotation("", coordinate: userCoord, anchor: .center) {
-                        UserHeadingMarker(headingDegrees: headingDegrees)
-                            .accessibilityLabel("Your location and direction")
-                            .allowsHitTesting(false)
-                    }
-                }
-            }
-            .onMapCameraChange { context in
-                mapRegion = context.region
             }
             .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
 
             Button {
                 if let location = locationManager.location {
-                    let region = mapRegion(center: location.coordinate, radius: 200)
                     withAnimation(.easeInOut(duration: 0.45)) {
-                        cameraPosition = .region(region)
+                        mapRegion = mapRegion(center: location.coordinate, radius: 200)
                     }
                 }
             } label: {
@@ -177,36 +181,51 @@ private extension MainMapPageView {
     }
 
     var placesSection: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 14) {
             Text(sectionTitle)
-                .font(.system(size: 27, weight: .bold))
+                .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(.primary)
+                .padding(.horizontal, 20)
 
             if viewModel.isSearching && viewModel.places.isEmpty {
                 LoadingPlaceCard()
+                    .padding(.horizontal, 20)
             } else if let message = viewModel.errorMessage ?? locationManager.errorMessage, viewModel.places.isEmpty {
                 MessageCard(text: message)
+                    .padding(.horizontal, 20)
             } else if viewModel.places.isEmpty {
                 MessageCard(text: "No nearby halal food results yet.")
+                    .padding(.horizontal, 20)
             } else {
                 if viewModel.isSearching {
                     Label("Updating this map area", systemImage: "arrow.triangle.2.circlepath")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.secondary)
+                        .padding(.horizontal, 20)
                 }
 
-                ForEach(viewModel.places.prefix(12)) { place in
-                    FoodPlaceCard(
-                        place: place,
-                        isFocused: focusedPlaceID == place.id,
-                        onFocus: {
-                            focus(place)
-                        },
-                        onNavigate: {
-                            navigationPath.append(place)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(viewModel.places.prefix(12)) { place in
+                            FoodPlaceCard(
+                                place: place,
+                                isFocused: focusedPlaceID == place.id,
+                                onFocus: {
+                                    focus(place)
+                                },
+                                onNavigate: {
+                                    navigationPath.append(.finding(place))
+                                },
+                                onSelectName: {
+                                    navigationPath.append(.detail(place))
+                                }
+                            )
+                            .frame(width: 300)
+                            .id(place.id)
                         }
-                    )
-                    .id(place.id)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
                 }
             }
         }
@@ -228,6 +247,16 @@ private extension MainMapPageView {
         }
 
         return "Compass heading: \(Int(headingDegrees.rounded())) degrees"
+    }
+
+    var mapAnnotations: [MainMapAnnotation] {
+        var annotations = viewModel.places.map(MainMapAnnotation.place)
+
+        if let location = locationManager.location {
+            annotations.append(.user(location.coordinate, headingDegrees))
+        }
+
+        return annotations
     }
 
     var headingDegrees: CLLocationDirection? {
@@ -256,10 +285,10 @@ private extension MainMapPageView {
         focusedPlaceID = place.id
 
         withAnimation(.easeInOut(duration: 0.35)) {
-            cameraPosition = .region(MKCoordinateRegion(
+            mapRegion = MKCoordinateRegion(
                 center: place.coordinate,
                 span: mapRegion.span
-            ))
+            )
         }
 
         if let scrollProxy {
@@ -273,3 +302,4 @@ private extension MainMapPageView {
 #Preview {
     MainMapPageView()
 }
+

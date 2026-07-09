@@ -9,6 +9,7 @@ struct ExploreRestaurantCard: View {
 
     let place: NearbyFoodPlace
     let onDirections: () -> Void
+    let onSelect: () -> Void
 
     private let accent = Color(red: 0.18, green: 0.42, blue: 0.35)
 
@@ -31,6 +32,9 @@ struct ExploreRestaurantCard: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(.regularMaterial)
             }
+        }
+        .onTapGesture {
+            onSelect()
         }
     }
 
