@@ -2,8 +2,6 @@
 //  PlaceDetailSheetView.swift
 //  MangoProject
 //
-//  Created by Belmiro Kayru on 04/07/26.
-//
 
 import SwiftUI
 
@@ -14,17 +12,14 @@ struct PlaceDetailSheetView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 28) {
+            VStack(spacing: 24) {
                 dragHandle
                 header
-                websiteButton
+                foodPhotoCarousel
                 summaryRow
                 hoursSection
                 detailsSection
-                reportButton
-                actionBar
             }
-            .padding(.horizontal, 20)
             .padding(.top, 12)
             .padding(.bottom, 34)
         }
@@ -50,9 +45,7 @@ private extension PlaceDetailSheetView {
         ZStack(alignment: .top) {
             HStack {
                 CircleIconButton(systemImage: "square.and.arrow.up", action: onShare)
-
                 Spacer()
-
                 CircleIconButton(systemImage: "xmark", action: onClose)
             }
 
@@ -78,26 +71,23 @@ private extension PlaceDetailSheetView {
             .padding(.top, 44)
         }
         .frame(minHeight: 98)
+        .padding(.horizontal, 20)
     }
 
-    var websiteButton: some View {
-        Button {
-        } label: {
-            VStack(spacing: 8) {
-                Image(systemName: "safari.fill")
-                    .font(.system(size: 22, weight: .bold))
+    // MARK: - Food Photo Carousel
 
-                Text("Website")
-                    .font(.system(size: 20, weight: .bold))
+    var foodPhotoCarousel: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(FoodPhotoPlaceholder.samples) { placeholder in
+                    FoodPhotoCard(placeholder: placeholder)
+                }
             }
-            .foregroundStyle(.blue)
-            .frame(maxWidth: .infinity)
-            .frame(height: 92)
-            .background(Color.blue.opacity(0.16))
-            .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+            .padding(.horizontal, 20)
+            .scrollTargetLayout()
         }
-        .buttonStyle(.plain)
-        .accessibilityHint(state.websiteText)
+        .scrollTargetBehavior(.viewAligned)
+        .frame(height: 175)
     }
 
     var summaryRow: some View {
@@ -106,6 +96,7 @@ private extension PlaceDetailSheetView {
             SummaryItem(title: "Distance", value: state.distanceText, valueColor: .white, systemImage: "point.topleft.down.curvedto.point.bottomright.up")
         }
         .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
     }
 
     var hoursSection: some View {
@@ -117,9 +108,7 @@ private extension PlaceDetailSheetView {
             HStack(alignment: .top) {
                 Text(state.hoursStatus)
                     .foregroundStyle(.green)
-
                 Spacer()
-
                 Text(state.hoursText)
                     .foregroundStyle(.white)
             }
@@ -132,22 +121,19 @@ private extension PlaceDetailSheetView {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Normal Hours")
                         .foregroundStyle(.white.opacity(0.46))
-
                     Text("Every Day")
                         .foregroundStyle(.white)
                 }
-
                 Spacer()
-
                 Text(state.hoursText)
                     .foregroundStyle(.white)
-
                 Image(systemName: "chevron.down")
                     .font(.headline)
                     .foregroundStyle(.white.opacity(0.34))
             }
             .font(.system(size: 22, weight: .regular))
         }
+        .padding(.horizontal, 20)
     }
 
     var detailsSection: some View {
@@ -156,48 +142,78 @@ private extension PlaceDetailSheetView {
                 .font(.system(size: 28, weight: .bold))
                 .foregroundStyle(.white)
 
-            DetailRow(label: "Website", value: state.websiteText, valueColor: .blue)
-
-            Divider()
-                .overlay(Color.white.opacity(0.12))
-
             DetailRow(label: "Address", value: state.addressLines.joined(separator: "\n"), alignment: .trailing)
         }
+        .padding(.horizontal, 20)
     }
+}
 
-    var reportButton: some View {
-        Button {
-        } label: {
-            Label("Report an Issue", systemImage: "exclamationmark.bubble.fill")
-                .font(.system(size: 21, weight: .bold))
-                .foregroundStyle(.blue)
-                .frame(maxWidth: .infinity)
-                .frame(height: 72)
-                .background(Color.blue.opacity(0.16))
-                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
+// MARK: - Food Photo Placeholder Model
 
-    var actionBar: some View {
-        HStack(spacing: 34) {
-            Image(systemName: "plus")
-            Image(systemName: "star")
-            Image(systemName: "hand.thumbsup")
-            Image(systemName: "ellipsis")
+private struct FoodPhotoPlaceholder: Identifiable {
+    let id: Int
+    let icon: String
+    let topColor: Color
+    let bottomColor: Color
+    let label: String
+
+    static let samples: [FoodPhotoPlaceholder] = [
+        .init(id: 0, icon: "fork.knife",
+              topColor: Color(red: 0.83, green: 0.34, blue: 0.04),
+              bottomColor: Color(red: 0.55, green: 0.18, blue: 0.02),
+              label: "Main Course"),
+        .init(id: 1, icon: "cup.and.saucer.fill",
+              topColor: Color(red: 0.23, green: 0.42, blue: 0.26),
+              bottomColor: Color(red: 0.12, green: 0.24, blue: 0.14),
+              label: "Drinks"),
+        .init(id: 2, icon: "birthday.cake.fill",
+              topColor: Color(red: 0.55, green: 0.20, blue: 0.78),
+              bottomColor: Color(red: 0.30, green: 0.09, blue: 0.46),
+              label: "Desserts"),
+        .init(id: 3, icon: "takeoutbag.and.cup.straws.fill",
+              topColor: Color(red: 0.72, green: 0.12, blue: 0.12),
+              bottomColor: Color(red: 0.40, green: 0.06, blue: 0.06),
+              label: "Takeout"),
+        .init(id: 4, icon: "fish.fill",
+              topColor: Color(red: 0.11, green: 0.40, blue: 0.62),
+              bottomColor: Color(red: 0.06, green: 0.20, blue: 0.36),
+              label: "Seafood"),
+    ]
+}
+
+// MARK: - Food Photo Card
+
+private struct FoodPhotoCard: View {
+    let placeholder: FoodPhotoPlaceholder
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [placeholder.topColor, placeholder.bottomColor],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            VStack(spacing: 10) {
+                Image(systemName: placeholder.icon)
+                    .font(.system(size: 44, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.88))
+
+                Text(placeholder.label)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.60))
+            }
         }
-        .font(.system(size: 28, weight: .regular))
-        .foregroundStyle(.white)
-        .padding(.horizontal, 34)
-        .frame(height: 62)
-        .background(Color.black.opacity(0.36))
-        .clipShape(Capsule())
+        .frame(width: 155, height: 175)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
-            Capsule()
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
         )
     }
 }
+
+// MARK: - Shared Sub-views
 
 struct CompactPlaceSheetView: View {
     let state: FindingPlaceDetailState
@@ -205,7 +221,6 @@ struct CompactPlaceSheetView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Drag indicator
             Capsule()
                 .fill(Color.primary.opacity(0.25))
                 .frame(width: 36, height: 5)
@@ -277,7 +292,6 @@ private struct SummaryItem: View {
                     Image(systemName: systemImage)
                         .font(.system(size: 16, weight: .semibold))
                 }
-
                 Text(value)
                     .font(.system(size: 22, weight: .regular))
             }
@@ -297,9 +311,7 @@ private struct DetailRow: View {
             Text(label)
                 .font(.system(size: 21, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.48))
-
             Spacer()
-
             Text(value)
                 .font(.system(size: 21, weight: .regular))
                 .foregroundStyle(valueColor)
