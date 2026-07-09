@@ -16,6 +16,7 @@ struct ExplorePageView: View {
     @State private var sheetDetent: PresentationDetent = .medium
     @State private var selectedPlace: NearbyFoodPlace?
     @State private var detailedPlace: NearbyFoodPlace?
+    @State private var focusedPlace: NearbyFoodPlace?
 
     private let regionRefreshTimer = Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
     private let focusedDetent = PresentationDetent.height(300)
@@ -61,17 +62,33 @@ struct ExplorePageView: View {
             }
         }
         .sheet(isPresented: $isSheetPresented) {
-            ExploreSheetContent(
-                searchText: $viewModel.searchText,
-                selectedCategories: $viewModel.selectedCategories,
-                categories: viewModel.categories,
-                places: viewModel.filteredPlaces,
-                isSearching: viewModel.isSearching,
-                onSelectCategory: viewModel.selectCategory,
-                onClearSearch: viewModel.clearSearch,
-                onDirections: { selectedPlace = $0 },
-                onSelect: { detailedPlace = $0 }
-            )
+            Group {
+                if let place = focusedPlace {
+                    ExplorePlaceCard(
+                        place: place,
+                        onClose: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                focusedPlace = nil
+                            }
+                        },
+                        onDirections: {
+                            selectedPlace = place
+                        }
+                    )
+                } else {
+                    ExploreSheetContent(
+                        searchText: $viewModel.searchText,
+                        selectedCategories: $viewModel.selectedCategories,
+                        categories: viewModel.categories,
+                        places: viewModel.filteredPlaces,
+                        isSearching: viewModel.isSearching,
+                        onSelectCategory: viewModel.selectCategory,
+                        onClearSearch: viewModel.clearSearch,
+                        onDirections: { selectedPlace = $0 },
+                        onSelect: { detailedPlace = $0 }
+                    )
+                }
+            }
             .fullScreenCover(item: $selectedPlace) { place in
                 DirectionPageView(place: place, locationManager: viewModel.locationManager)
             }
