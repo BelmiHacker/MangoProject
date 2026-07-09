@@ -19,6 +19,11 @@ struct NearbyFoodPlace: Identifiable, Hashable {
     let url: URL?
     let distanceInMeters: CLLocationDistance?
     let mapItem: MKMapItem
+    let businessName: String?
+    let certificateNumber: String?
+    let certificateIssueDate: String?
+    let totalProducts: Int?
+    let isHalal: Bool
 
     var distanceText: String {
         guard let distanceInMeters else {
@@ -49,7 +54,7 @@ struct NearbyFoodPlace: Identifiable, Hashable {
 }
 
 extension NearbyFoodPlace {
-    init(mapItem: MKMapItem, userLocation: CLLocation?) {
+    init(mapItem: MKMapItem, userLocation: CLLocation?, csvPlace: CSVPlace? = nil) {
         let coordinate: CLLocationCoordinate2D
         let addressParts: [String]
 
@@ -83,12 +88,21 @@ extension NearbyFoodPlace {
         ].joined(separator: "-")
         self.name = mapItem.name ?? "Unnamed place"
         self.address = addressParts.joined(separator: ", ")
-        self.category = mapItem.pointOfInterestCategory?.displayName ?? "Food place"
+        if let csvType = csvPlace?.type, !csvType.isEmpty {
+            self.category = csvType
+        } else {
+            self.category = mapItem.pointOfInterestCategory?.displayName ?? "Food place"
+        }
         self.coordinate = coordinate
         self.phoneNumber = mapItem.phoneNumber
         self.url = mapItem.url
         self.distanceInMeters = distance
         self.mapItem = mapItem
+        self.businessName = csvPlace?.businessName
+        self.certificateNumber = csvPlace?.certificateNumber
+        self.certificateIssueDate = csvPlace?.certificateIssueDate
+        self.totalProducts = csvPlace?.totalProducts
+        self.isHalal = csvPlace?.halalFound ?? false
     }
 }
 

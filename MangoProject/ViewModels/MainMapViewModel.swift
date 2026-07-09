@@ -19,6 +19,14 @@ final class MainMapViewModel: ObservableObject {
     private var lastSearchCenter: CLLocation?
     private var lastSearchRadius: CLLocationDistance?
 
+    private let csvPlaces: [CSVPlace] = CSVDataLoader.loadAll()
+    
+    var datasetCategories: [String] {
+        let halalPlaces = csvPlaces.filter { $0.halalFound && !$0.type.isEmpty }
+        let uniqueTypes = Set(halalPlaces.map { $0.type.trimmingCharacters(in: .whitespacesAndNewlines) })
+        return Array(uniqueTypes).sorted()
+    }
+
     @MainActor
     func refreshPlaces(in region: MKCoordinateRegion, userLocation: CLLocation?) async {
         guard !isSearching else {
@@ -41,30 +49,24 @@ final class MainMapViewModel: ObservableObject {
         isSearching = true
         errorMessage = nil
 
-        var mapItemsByID: [String: MKMapItem] = [:]
-
-        let mapItems = await searchVisibleFoodPlaces(in: region)
-
-        for item in mapItems {
-            let coordinate: CLLocationCoordinate2D
-            if #available(iOS 26, *) {
-                coordinate = item.location.coordinate
-            } else {
-                coordinate = item.placemark.coordinate
-            }
-            let itemLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-
-            guard centerLocation.distance(from: itemLocation) <= visibleRadius else {
+        var newPlaces: [NearbyFoodPlace] = []
+        
+        for csvPlace in self.csvPlaces where csvPlace.halalFound {
+            let placeLocation = CLLocation(latitude: csvPlace.latitude, longitude: csvPlace.longitude)
+            guard centerLocation.distance(from: placeLocation) <= visibleRadius else {
                 continue
             }
-
-            let id = Self.itemID(for: item)
-            mapItemsByID[id] = item
+            
+            let coord = CLLocationCoordinate2D(latitude: csvPlace.latitude, longitude: csvPlace.longitude)
+            let placemark = MKPlacemark(coordinate: coord)
+            let mapItem = MKMapItem(placemark: placemark)
+            mapItem.name = csvPlace.name
+            
+            let nearbyPlace = NearbyFoodPlace(mapItem: mapItem, userLocation: userLocation, csvPlace: csvPlace)
+            newPlaces.append(nearbyPlace)
         }
-
-        places = mapItemsByID.values
-            .filter(isAllowedFoodPlace)
-            .map { NearbyFoodPlace(mapItem: $0, userLocation: userLocation) }
+        
+        places = newPlaces
             .sorted { ($0.distanceInMeters ?? Double.greatestFiniteMagnitude) < ($1.distanceInMeters ?? Double.greatestFiniteMagnitude) }
 
         isSearching = false
