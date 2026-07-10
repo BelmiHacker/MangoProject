@@ -22,7 +22,7 @@ struct RootTabView: View {
 
             Tab(value: RootTab.foodDNA) {
                 NavigationStack {
-                    FoodDNAPageView()
+                    FoodDNAView()
                 }
             } label: {
                 Label(RootTab.foodDNA.label, systemImage: RootTab.foodDNA.icon)
