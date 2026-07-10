@@ -41,15 +41,8 @@ struct FindingNavigationView: View {
 
 private extension FindingNavigationView {
     var background: some View {
-        LinearGradient(
-            colors: [
-                Color(red: 0.17, green: 0.18, blue: 0.16),
-                Color(red: 0.14, green: 0.13, blue: 0.09)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
+        Color("AppBackground")
+            .ignoresSafeArea()
     }
 
     var instructionCarousel: some View {
@@ -73,7 +66,7 @@ private extension FindingNavigationView {
             }
             .padding(.vertical, 10)
         }
-        .background(Color.black.opacity(0.82))
+        .background(Color("Accent"))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
@@ -134,7 +127,7 @@ private struct FindMyDirectionArrowView: View {
     var arrow: some View {
         Image(systemName: "arrow.up")
             .font(.system(size: 185, weight: .black))
-            .foregroundStyle(.white)
+            .foregroundStyle(Color("Accent"))
             .rotationEffect(.degrees(angle + 90))
             .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
     }
