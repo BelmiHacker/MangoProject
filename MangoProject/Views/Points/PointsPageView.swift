@@ -6,8 +6,8 @@
 import SwiftUI
 
 struct PointsPageView: View {
-    @State private var isNFCScanPresented = false
-    @State private var isQRScanPresented = false
+    @State private var isCollectMethodPresented = false
+    @State private var redeemingBenefit: Benefit?
     @State private var points = 67
 
     var body: some View {
@@ -16,10 +16,13 @@ struct PointsPageView: View {
                 headerText
                 MyPointsCard(
                     points: points,
-                    onTapToCollect: { isNFCScanPresented = true },
-                    onScanQR: { isQRScanPresented = true }
+                    onCollect: { isCollectMethodPresented = true }
                 )
-                BenefitsSection(benefits: Benefit.samples)
+                BenefitsSection(
+                    benefits: Benefit.samples,
+                    points: points,
+                    onRedeem: { redeemingBenefit = $0 }
+                )
                 RecentActivitySection(items: ActivityItem.samples)
             }
             .padding(.horizontal, 20)
@@ -28,26 +31,17 @@ struct PointsPageView: View {
         }
         .background(Color("AppBackground").ignoresSafeArea())
         .preferredColorScheme(.light)
-        .fullScreenCover(isPresented: $isQRScanPresented) {
-            QRScannerSheet(
-                onCancel: { isQRScanPresented = false },
-                onScan: { _ in isQRScanPresented = false }
+        .fullScreenCover(isPresented: $isCollectMethodPresented) {
+            CollectPointsMethodView(
+                onCancel: { isCollectMethodPresented = false },
+                onCollected: { points += 500 }
             )
         }
-        .sheet(isPresented: $isNFCScanPresented) {
-            NFCScanSheet(
-                onCancel: { isNFCScanPresented = false },
-                onSuccess: {
-                    points += 500
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                        isNFCScanPresented = false
-                    }
-                }
+        .fullScreenCover(item: $redeemingBenefit) { benefit in
+            RedeemBenefitQRView(
+                benefit: benefit,
+                onClose: { redeemingBenefit = nil }
             )
-            .presentationDetents([.height(480)])
-            .presentationDragIndicator(.hidden)
-            .presentationCornerRadius(28)
-            .presentationBackground(.clear)
         }
     }
 
