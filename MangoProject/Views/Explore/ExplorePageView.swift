@@ -117,10 +117,20 @@ struct ExplorePageView: View {
 
     // MARK: - Back Button
 
+    /// The root `TabView` keeps this tab's view alive across tab switches,
+    /// so `isSheetPresented` never resets on its own the way it did when
+    /// Explore used to be torn down and rebuilt on every visit. Without
+    /// this, the sheet stays presented on top of whichever tab you switch
+    /// to next.
+    private func handleBack() {
+        isSheetPresented = false
+        onBack()
+    }
+
     private var backButtonOverlay: some View {
         VStack {
             HStack {
-                Button(action: onBack) {
+                Button(action: handleBack) {
                     ZStack {
                         if #available(iOS 26, *) {
                             Circle()
