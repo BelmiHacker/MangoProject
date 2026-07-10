@@ -15,8 +15,10 @@ struct FoodDNASummaryCard: View {
     let status: DishDNAStatus
 
     var body: some View {
-        ZStack(alignment: .trailing) {
-            decorativeCircle
+        HStack(spacing: 0) {
+            Rectangle()
+                .fill(darkColor)
+                .frame(width: 6)
 
             VStack(alignment: .leading, spacing: Spacing.small) {
                 HStack(spacing: Spacing.xs) {
@@ -34,22 +36,14 @@ struct FoodDNASummaryCard: View {
 
                 Text(status.summaryDescription)
                     .font(Typography.bodySecondary)
-                    .foregroundStyle(Color("TextSecondary"))
+                    .foregroundStyle(Color("TextPrimary").opacity(0.75))
             }
             .padding(Spacing.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color("CardBackground"))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(lightColor)
         .clipShape(RoundedRectangle(cornerRadius: Radius.card))
         .appShadow(Shadow.card)
-        .clipped()
-    }
-
-    private var decorativeCircle: some View {
-        Circle()
-            .fill(lightColor)
-            .frame(width: 160, height: 160)
-            .offset(x: 60)
     }
 
     private var darkColor: Color {
