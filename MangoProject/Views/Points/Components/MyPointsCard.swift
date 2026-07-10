@@ -7,55 +7,37 @@ import SwiftUI
 
 struct MyPointsCard: View {
     let points: Int
-    var onTapToCollect: () -> Void = {}
-    var onScanQR: () -> Void = {}
+    var onCollect: () -> Void = {}
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("My Points")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.75))
+        VStack(alignment: .leading, spacing: 10) {
+            Text("My Points")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.75))
 
-                HStack(alignment: .center, spacing: 8) {
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 38))
-                        .foregroundStyle(.yellow)
+            HStack(alignment: .center, spacing: 8) {
+                Image(systemName: "star.fill")
+                    .font(.system(size: 38))
+                    .foregroundStyle(Color("AccentStar"))
 
-                    Text("\(points)")
-                        .font(.system(size: 52, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-            }
+                Text("\(points)")
+                    .font(Typography.screenTitle)
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
 
-            HStack(spacing: 10) {
-                Button(action: onTapToCollect) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "wave.3.right")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Tap To Collect")
-                            .font(.system(size: 15, weight: .semibold))
-                    }
-                    .foregroundStyle(Color(red: 0.11, green: 0.38, blue: 0.29))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 40)
-                    .background(.white)
-                    .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
+                Spacer(minLength: 12)
 
-                Button(action: onScanQR) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "qrcode.viewfinder")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Scan QR")
-                            .font(.system(size: 15, weight: .semibold))
-                    }
-                    .foregroundStyle(Color(red: 0.11, green: 0.38, blue: 0.29))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 40)
-                    .background(.white)
-                    .clipShape(Capsule())
+                Button {
+                    onCollect()
+                } label: {
+                    Label("Collect", systemImage: "star.circle.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color("Accent"))
+                        .padding(.horizontal, 16)
+                        .frame(height: 44)
+                        .background(.white)
+                        .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
             }
@@ -63,7 +45,7 @@ struct MyPointsCard: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(red: 0.11, green: 0.38, blue: 0.29))
+                .fill(Color("Accent"))
         )
     }
 }
