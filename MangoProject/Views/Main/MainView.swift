@@ -20,12 +20,16 @@ import SwiftUI
 /// and renders it, without containing any business logic itself.
 struct MainView: View {
     @State private var viewModel: MainViewModel
+    @State private var showingProfile = false
+
+    var onNavigateToPoints: (() -> Void)? = nil
 
     /// Accepts an optional pre-configured view model, primarily so previews
     /// and future tests can inject specific states (e.g. with recent searches
     /// already populated) instead of always starting from defaults.
-    init(viewModel: MainViewModel = MainViewModel()) {
+    init(viewModel: MainViewModel = MainViewModel(), onNavigateToPoints: (() -> Void)? = nil) {
         _viewModel = State(initialValue: viewModel)
+        self.onNavigateToPoints = onNavigateToPoints
     }
 
     var body: some View {
@@ -34,7 +38,7 @@ struct MainView: View {
                 GreetingHeaderView(
                     userName: viewModel.userName,
                     onProfileTapped: {
-                        // TODO: wire up navigation to Profile once routing is decided.
+                        showingProfile = true
                     }
                 )
 
@@ -54,6 +58,13 @@ struct MainView: View {
             .padding(Spacing.medium)
         }
         .background(Color("AppBackground"))
+        .navigationDestination(isPresented: $showingProfile) {
+            ProfileView(onNavigateToPoints: {
+                // First dismiss the profile view, then switch tabs
+                showingProfile = false
+                onNavigateToPoints?()
+            })
+        }
     }
 }
 
