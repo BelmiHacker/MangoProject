@@ -26,7 +26,7 @@ struct PointsPageView: View {
             .padding(.top, 16)
             .padding(.bottom, 40)
         }
-        .background(Color(red: 0.87, green: 0.90, blue: 0.85).ignoresSafeArea())
+        .background(Color("AppBackground").ignoresSafeArea())
         .preferredColorScheme(.light)
         .fullScreenCover(isPresented: $isQRScanPresented) {
             QRScannerSheet(

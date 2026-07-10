@@ -6,7 +6,11 @@ struct RootTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab(value: RootTab.home) {
-                MainView()
+                NavigationStack {
+                    MainView(onNavigateToPoints: {
+                        selectedTab = .points
+                    })
+                }
             } label: {
                 Label(RootTab.home.label, systemImage: RootTab.home.icon)
             }
@@ -22,7 +26,7 @@ struct RootTabView: View {
 
             Tab(value: RootTab.foodDNA) {
                 NavigationStack {
-                    FoodDNAPageView()
+                    FoodDNAView()
                 }
             } label: {
                 Label(RootTab.foodDNA.label, systemImage: RootTab.foodDNA.icon)
