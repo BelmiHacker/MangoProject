@@ -5,75 +5,61 @@
 //  Created by Muthiara Putri Aliyu on 10/07/26.
 //
 
+
 import SwiftUI
 
-/// Top summary card on the Food DNA screen — icon, status title, description,
-/// and a decorative colored circle. Color/copy/icon all driven by the
-/// overall DishDNAStatus passed in; this view has no logic of its own.
-struct FoodDNASummaryCard: View {
-    let status: DishDNAStatus
+struct FoodDNAView: View {
+    @State private var viewModel: FoodDNAViewModel
+
+    init(viewModel: FoodDNAViewModel = FoodDNAViewModel()) {
+        _viewModel = State(initialValue: viewModel)
+    }
 
     var body: some View {
-        ZStack(alignment: .trailing) {
-            decorativeCircle
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.section) {
+                Text("Food DNA Analysis")
+                    .font(Typography.screenTitle)
+                    .foregroundStyle(Color("TextPrimary"))
 
-            VStack(alignment: .leading, spacing: Spacing.small) {
-                HStack(spacing: Spacing.xs) {
-                    Image(systemName: status.iconName)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 28, height: 28)
-                        .background(darkColor)
-                        .clipShape(Circle())
+                if viewModel.hasScannedMenu {
+                    ScannedMenuImageView(onRetryTapped: {
+                        viewModel.resetScan()
+                    })
 
-                    Text(status.summaryTitle)
-                        .font(Typography.cardTitle)
-                        .foregroundStyle(darkColor)
+                    FoodDNASummaryCard(status: viewModel.overallStatus)
+
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("\(viewModel.dishes.count) Dishes detected")
+                            .font(Typography.cardSubtitle)
+                            .foregroundStyle(Color("TextSecondary"))
+
+                        VStack(spacing: Spacing.small) {
+                            ForEach(viewModel.dishes) { dish in
+                                DishRow(dish: dish)
+                            }
+                        }
+                    }
+                } else {
+                    EmptyScanStateView(onScanTapped: {
+                        viewModel.startScan()
+                    })
                 }
-
-                Text(status.summaryDescription)
-                    .font(Typography.bodySecondary)
-                    .foregroundStyle(Color("TextSecondary"))
             }
-            .padding(Spacing.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Spacing.medium)
         }
-        .background(Color("CardBackground"))
-        .clipShape(RoundedRectangle(cornerRadius: Radius.card))
-        .appShadow(Shadow.card)
-        .clipped()
-    }
-
-    private var decorativeCircle: some View {
-        Circle()
-            .fill(lightColor)
-            .frame(width: 160, height: 160)
-            .offset(x: 60)
-    }
-
-    private var darkColor: Color {
-        switch status {
-        case .halal: return Color("StatusHalalDark")
-        case .needsVerification: return Color("StatusWarningDark")
-        case .nonHalal: return Color("StatusDangerDark")
-        }
-    }
-
-    private var lightColor: Color {
-        switch status {
-        case .halal: return Color("StatusHalalLight")
-        case .needsVerification: return Color("StatusWarningLight")
-        case .nonHalal: return Color("StatusDangerLight")
-        }
+        .background(Color("AppBackground"))
     }
 }
 
-#Preview {
-    VStack(spacing: Spacing.medium) {
-        FoodDNASummaryCard(status: .halal)
-        FoodDNASummaryCard(status: .needsVerification)
-        FoodDNASummaryCard(status: .nonHalal)
-    }
-    .padding()
-    .background(Color("AppBackground"))
+#Preview("Scanned — all halal") {
+    let viewModel = FoodDNAViewModel()
+    viewModel.dishes = [DishDisplayModel.mockList[0]]
+    return FoodDNAView(viewModel: viewModel)
+}
+
+#Preview("Empty — pre-scan") {
+    let viewModel = FoodDNAViewModel()
+    viewModel.resetScan()
+    return FoodDNAView(viewModel: viewModel)
 }
