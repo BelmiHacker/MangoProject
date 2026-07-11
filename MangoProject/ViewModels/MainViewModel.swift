@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import CoreLocation
+import MapKit
 
 /// Owns the state for MainView.
 /// Currently populated with mock/placeholder data — no networking, no persistence.
@@ -34,7 +36,33 @@ final class MainViewModel {
 
     // MARK: - Restaurant sections
 
-    var recommendedPlaces: [RestaurantCardDisplayModel] = RestaurantCardDisplayModel.mockList
+    var recommendedPlaces: [RestaurantCardDisplayModel] = {
+        let allPlaces = CSVDataLoader.loadAll().filter { $0.halalFound }
+        var mapped = allPlaces.map { csv in
+            let hash = abs(csv.name.hashValue)
+            let rating = 3.0 + Double(hash % 21) / 10.0
+            let coordinate = CLLocationCoordinate2D(latitude: csv.latitude, longitude: csv.longitude)
+            let placemark = MKPlacemark(coordinate: coordinate)
+            let mapItem = MKMapItem(placemark: placemark)
+            mapItem.name = csv.name
+            let nearbyPlace = NearbyFoodPlace(mapItem: mapItem, userLocation: nil, csvPlace: csv)
+            
+            return RestaurantCardDisplayModel(
+                id: csv.name,
+                name: csv.name,
+                categoryDisplayName: csv.type.isEmpty ? "Food" : csv.type,
+                distanceText: "Nearby",
+                rating: rating,
+                descriptionText: csv.businessName,
+                addressText: "The Breeze / Maggiore",
+                isBookmarked: false,
+                imagePlaceholderSymbol: "photo",
+                nearbyPlace: nearbyPlace
+            )
+        }
+        mapped.sort { $0.rating > $1.rating }
+        return mapped
+    }()
 
     /// Empty by default to represent a first-time user with no search history yet.
     /// Populate with mock data manually while testing the "after use" state.

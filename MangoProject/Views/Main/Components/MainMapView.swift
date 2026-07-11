@@ -76,13 +76,9 @@ struct MainMapPageView: View {
             .navigationDestination(for: NavigationDest.self) { dest in
                 switch dest {
                 case .finding(let place):
-                    FindingExperienceView(
-                        targetName: place.name,
-                        targetDistanceText: place.distanceText,
-                        targetCategory: place.category,
-                        targetLocationName: "Apple Maps",
-                        targetAddressLines: place.addressLines,
-                        targetCoordinate: place.coordinate
+                    DirectionPageView(
+                        place: place,
+                        locationManager: locationManager
                     )
                 case .detail(let place):
                     RestaurantDetailView(place: place)

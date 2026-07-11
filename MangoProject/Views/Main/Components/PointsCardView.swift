@@ -12,6 +12,7 @@ import SwiftUI
 /// Will later reflect real-time updates after NFC scans via MainViewModel.
 struct PointsCardView: View {
     let points: Int
+    var onTapToCollect: () -> Void = {}
 
     var body: some View {
         HStack {
@@ -33,11 +34,20 @@ struct PointsCardView: View {
 
             Spacer()
 
-            // Placeholder badge — mockup shows a plain circular element here.
-            // Exact purpose (avatar? tier icon?) to be confirmed with design.
-            Circle()
-                .fill(.white)
-                .frame(width: 44, height: 44)
+            Button(action: { onTapToCollect() }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "wave.3.right")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("Tap To Collect")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                .foregroundStyle(Color(red: 0.11, green: 0.38, blue: 0.29))
+                .padding(.horizontal, 16)
+                .frame(height: 40)
+                .background(.white)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
         }
         .padding(Spacing.cardPadding)
         .background(Color("Accent"))
