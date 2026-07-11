@@ -1,14 +1,12 @@
 //
-//  MapAnnotations.swift
+//  MapAnnotationViews.swift
 //  MangoProject
-//
-//  Created by Belmiro Kayru on 05/07/26.
 //
 
 import CoreLocation
 import SwiftUI
 
-// MARK: - Annotation Models
+// MARK: - Annotation Model
 
 enum MainMapAnnotation: Identifiable {
     case user(CLLocationCoordinate2D, CLLocationDirection?)
@@ -16,24 +14,20 @@ enum MainMapAnnotation: Identifiable {
 
     var id: String {
         switch self {
-        case .user:
-            return "user-location-heading"
-        case .place(let place):
-            return place.id
+        case .user: return "user-location-heading"
+        case .place(let place): return place.id
         }
     }
 
     var coordinate: CLLocationCoordinate2D {
         switch self {
-        case .user(let coordinate, _):
-            return coordinate
-        case .place(let place):
-            return place.coordinate
+        case .user(let coordinate, _): return coordinate
+        case .place(let place): return place.coordinate
         }
     }
 }
 
-// MARK: - User Heading
+// MARK: - User Heading Marker
 
 struct UserHeadingMarker: View {
     let headingDegrees: CLLocationDirection?
@@ -83,9 +77,7 @@ struct UserHeadingMarker: View {
     }
 
     private func updateDisplayedHeading(animatedHeading newHeading: CLLocationDirection?) {
-        guard let newHeading else {
-            return
-        }
+        guard let newHeading else { return }
 
         if !hasDisplayedHeading {
             displayedHeading = newHeading
@@ -96,10 +88,11 @@ struct UserHeadingMarker: View {
         let currentWrapped = displayedHeading.truncatingRemainder(dividingBy: 360)
         let normalizedCurrent = currentWrapped < 0 ? currentWrapped + 360 : currentWrapped
         let shortestDelta = ((newHeading - normalizedCurrent + 540).truncatingRemainder(dividingBy: 360)) - 180
-
         displayedHeading += shortestDelta
     }
 }
+
+// MARK: - Heading Cone Shape
 
 struct HeadingConeShape: Shape {
     let spread: Double
@@ -120,12 +113,11 @@ struct HeadingConeShape: Shape {
             clockwise: false
         )
         path.closeSubpath()
-
         return path
     }
 }
 
-// MARK: - Food Pin
+// MARK: - Food Map Pin
 
 struct FoodMapPin: View {
     let isFocused: Bool

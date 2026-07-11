@@ -17,6 +17,8 @@
 //
 
 import Foundation
+import CoreLocation
+import MapKit
 
 struct RestaurantCardDisplayModel: Identifiable, Hashable {
     let id: String
@@ -31,6 +33,7 @@ struct RestaurantCardDisplayModel: Identifiable, Hashable {
     /// Placeholder-only. Real image handling (AsyncImage / URL / bundled asset)
     /// will be decided once the backend/image strategy is finalized.
     let imagePlaceholderSymbol: String
+    var nearbyPlace: NearbyFoodPlace?
 }
 
 extension RestaurantCardDisplayModel {

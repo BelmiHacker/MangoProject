@@ -20,12 +20,17 @@ import SwiftUI
 /// and renders it, without containing any business logic itself.
 struct MainView: View {
     @State private var viewModel: MainViewModel
+    @State private var showingProfile = false
+    @State private var isNFCScanPresented = false
+
+    var onNavigateToPoints: (() -> Void)? = nil
 
     /// Accepts an optional pre-configured view model, primarily so previews
     /// and future tests can inject specific states (e.g. with recent searches
     /// already populated) instead of always starting from defaults.
-    init(viewModel: MainViewModel = MainViewModel()) {
+    init(viewModel: MainViewModel = MainViewModel(), onNavigateToPoints: (() -> Void)? = nil) {
         _viewModel = State(initialValue: viewModel)
+        self.onNavigateToPoints = onNavigateToPoints
     }
 
     var body: some View {
@@ -34,11 +39,16 @@ struct MainView: View {
                 GreetingHeaderView(
                     userName: viewModel.userName,
                     onProfileTapped: {
-                        // TODO: wire up navigation to Profile once routing is decided.
+                        showingProfile = true
                     }
                 )
 
-                PointsCardView(points: viewModel.userPoints)
+                PointsCardView(
+                    points: viewModel.userPoints,
+                    onTapToCollect: { isNFCScanPresented = true }
+                )
+
+                OffersSectionView()
 
                 if viewModel.hasRecentSearches {
                     RecentSearchSectionView(places: viewModel.recentSearches)
@@ -54,6 +64,32 @@ struct MainView: View {
             .padding(Spacing.medium)
         }
         .background(Color("AppBackground"))
+        .navigationDestination(isPresented: $showingProfile) {
+            ProfileView(onNavigateToPoints: {
+                // First dismiss the profile view, then switch tabs
+                showingProfile = false
+                onNavigateToPoints?()
+            })
+        }
+        .navigationDestination(for: NearbyFoodPlace.self) { place in
+            RestaurantDetailView(place: place)
+                .navigationBarBackButtonHidden(true)
+        }
+        .sheet(isPresented: $isNFCScanPresented) {
+            NFCScanSheet(
+                onCancel: { isNFCScanPresented = false },
+                onSuccess: {
+                    viewModel.userPoints += 500
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        isNFCScanPresented = false
+                    }
+                }
+            )
+            .presentationDetents([.height(480)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
+            .presentationBackground(.clear)
+        }
     }
 }
 

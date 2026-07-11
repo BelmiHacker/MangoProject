@@ -14,12 +14,14 @@ final class ExploreViewModel: ObservableObject {
     // MARK: - Published UI State
 
     @Published var searchText = ""
-    @Published var selectedCategory = "All"
+    @Published var selectedCategories: Set<String> = []
     @Published var cameraPosition: MapCameraPosition
 
     // MARK: - Constants
 
-    let categories = ["Cafe", "Bakery", "Indonesian", "Chinese"]
+    var categories: [String] {
+        placesModel.datasetCategories
+    }
 
     // MARK: - Dependencies
 
@@ -35,8 +37,8 @@ final class ExploreViewModel: ObservableObject {
 
     private static let defaultRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: -6.2088, longitude: 106.8456),
-        latitudinalMeters: 300,
-        longitudinalMeters: 300
+        latitudinalMeters: 20000,
+        longitudinalMeters: 20000
     )
 
     // MARK: - Derived Data
@@ -49,8 +51,8 @@ final class ExploreViewModel: ObservableObject {
             let matchesSearch = searchText.isEmpty
                 || place.name.localizedCaseInsensitiveContains(searchText)
                 || place.category.localizedCaseInsensitiveContains(searchText)
-            let matchesCategory = selectedCategory == "All"
-                || place.category.localizedCaseInsensitiveContains(selectedCategory)
+            let matchesCategory = selectedCategories.isEmpty
+                || selectedCategories.contains { place.category.localizedCaseInsensitiveContains($0) }
             return matchesSearch && matchesCategory
         }
     }
@@ -92,8 +94,8 @@ final class ExploreViewModel: ObservableObject {
         guard !hasCenteredOnUser else { return }
         let region = MKCoordinateRegion(
             center: newLocation.coordinate,
-            latitudinalMeters: 300,
-            longitudinalMeters: 300
+            latitudinalMeters: 20000,
+            longitudinalMeters: 20000
         )
         cameraPosition = .region(region)
         mapRegion = region
@@ -107,11 +109,25 @@ final class ExploreViewModel: ObservableObject {
 
     func selectCategory(_ category: String) {
         withAnimation(.spring(response: 0.28, dampingFraction: 0.7)) {
-            selectedCategory = selectedCategory == category ? "All" : category
+            if selectedCategories.contains(category) {
+                selectedCategories.remove(category)
+            } else {
+                selectedCategories.insert(category)
+            }
         }
     }
 
     func clearSearch() {
         searchText = ""
+    }
+
+    func focusOn(place: NearbyFoodPlace) {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+            cameraPosition = .region(MKCoordinateRegion(
+                center: place.coordinate,
+                latitudinalMeters: 400,
+                longitudinalMeters: 400
+            ))
+        }
     }
 }

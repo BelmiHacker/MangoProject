@@ -2,8 +2,6 @@
 //  FindingNavigationView.swift
 //  MangoProject
 //
-//  Created by Belmiro Kayru on 04/07/26.
-//
 
 import SwiftUI
 
@@ -12,12 +10,14 @@ struct FindingNavigationView: View {
     var onClose: () -> Void = {}
     var onPlaySound: () -> Void = {}
 
+    @State private var selectedPage: Int = 0
+
     var body: some View {
         ZStack {
             background
 
             VStack(spacing: 0) {
-                instructionCard
+                instructionCarousel
 
                 Spacer(minLength: 24)
 
@@ -28,51 +28,70 @@ struct FindingNavigationView: View {
             .padding(.horizontal, 18)
             .padding(.top, 12)
         }
+        .onAppear {
+            selectedPage = state.stepProgress
+        }
+        .onChange(of: state.stepProgress) { _, newStep in
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                selectedPage = newStep
+            }
+        }
     }
 }
 
 private extension FindingNavigationView {
     var background: some View {
-        LinearGradient(
-            colors: [
-                Color(red: 0.17, green: 0.18, blue: 0.16),
-                Color(red: 0.14, green: 0.13, blue: 0.09)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
+        Color("AppBackground")
+            .ignoresSafeArea()
     }
 
-    var instructionCard: some View {
+    var instructionCarousel: some View {
+        VStack(spacing: 0) {
+            TabView(selection: $selectedPage) {
+                ForEach(state.steps) { step in
+                    stepPage(for: step)
+                        .tag(step.id)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 114)
+
+            HStack(spacing: 6) {
+                ForEach(state.steps) { step in
+                    Circle()
+                        .fill(step.id == selectedPage ? Color.white : Color.white.opacity(0.35))
+                        .frame(width: 7, height: 7)
+                        .animation(.easeInOut(duration: 0.2), value: selectedPage)
+                }
+            }
+            .padding(.vertical, 10)
+        }
+        .background(Color("Accent"))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    @ViewBuilder
+    func stepPage(for step: NavigationStep) -> some View {
         HStack(spacing: 18) {
-            Image(systemName: "location.north.fill")
-                .font(.system(size: 62, weight: .black))
+            Image(systemName: step.symbolName)
+                .font(.system(size: 56, weight: .black))
                 .foregroundStyle(.white)
-                .frame(width: 92)
-                .rotationEffect(.degrees(state.arrowAngle + 90))
-                .animation(.spring(response: 0.45, dampingFraction: 0.82), value: state.arrowAngle)
+                .frame(width: 80)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(state.instructionDistanceText)
-                    .font(.system(size: 38, weight: .bold))
+                Text(step.distanceText)
+                    .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(.white)
-
-                Text(state.instructionText)
-                    .font(.system(size: 26, weight: .bold))
+                Text(step.instruction)
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.white.opacity(0.78))
-
-                progressDots
-                    .padding(.top, 4)
+                    .lineLimit(2)
             }
 
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 18)
-        .frame(maxWidth: .infinity)
-        .frame(height: 150)
-        .background(Color.black.opacity(0.82))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .padding(.vertical, 10)
     }
 
     var directionDial: some View {
@@ -80,18 +99,8 @@ private extension FindingNavigationView {
             angle: state.arrowAngle,
             proximityProgress: state.proximityProgress
         )
-            .frame(maxWidth: .infinity)
-            .accessibilityLabel("Direction arrow")
-    }
-
-    var progressDots: some View {
-        HStack {
-            ForEach(0..<state.stepCount, id: \.self) { index in
-                Circle()
-                    .fill(index == state.stepProgress ? Color.white : Color.white.opacity(0.5))
-                    .frame(width: 10, height: 10)
-            }
-        }
+        .frame(maxWidth: .infinity)
+        .accessibilityLabel("Direction arrow")
     }
 
     var isAhead: Bool {
@@ -118,7 +127,7 @@ private struct FindMyDirectionArrowView: View {
     var arrow: some View {
         Image(systemName: "arrow.up")
             .font(.system(size: 185, weight: .black))
-            .foregroundStyle(.white)
+            .foregroundStyle(Color("Accent"))
             .rotationEffect(.degrees(angle + 90))
             .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
     }
@@ -159,10 +168,15 @@ private struct ProximityGlowView: View {
             directionFocusText: "right",
             arrowAngle: -45,
             instructionDistanceText: "20 m",
-            instructionText: "Take the stairs",
+            instructionText: "Head south on Jalan BSD Raya Utama",
             stepProgress: 0,
-            stepCount: 6,
-            proximityProgress: 0.5
+            stepCount: 3,
+            proximityProgress: 0.5,
+            steps: [
+                NavigationStep(id: 0, instruction: "Head south on Jalan BSD Raya Utama", distanceText: "85 m", symbolName: "arrow.up"),
+                NavigationStep(id: 1, instruction: "Turn left on Jalan Pahlawan Seribu", distanceText: "200 m", symbolName: "arrow.turn.up.left"),
+                NavigationStep(id: 2, instruction: "Arrive at Tamper Coffee", distanceText: "10 m", symbolName: "mappin.circle.fill")
+            ]
         )
     )
 }

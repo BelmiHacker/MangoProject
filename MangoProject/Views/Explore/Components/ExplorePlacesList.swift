@@ -11,6 +11,7 @@ struct ExplorePlacesList: View {
     let isSearching: Bool
     let searchText: String
     let onDirections: (NearbyFoodPlace) -> Void
+    let onSelect: (NearbyFoodPlace) -> Void
 
     var body: some View {
         ScrollView {
@@ -41,6 +42,8 @@ struct ExplorePlacesList: View {
                     ForEach(places.prefix(20)) { place in
                         ExploreRestaurantCard(place: place) {
                             onDirections(place)
+                        } onSelect: {
+                            onSelect(place)
                         }
                         .padding(.horizontal, 16)
                     }

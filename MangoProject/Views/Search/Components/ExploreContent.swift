@@ -56,13 +56,8 @@ struct ExploreContent: View {
             ))
         }
         .navigationDestination(item: $selectedPlace) { place in
-            FindingExperienceView(
-                targetName: place.name,
-                targetDistanceText: place.distanceText,
-                targetCategory: place.category,
-                targetLocationName: place.addressLines.first ?? "",
-                targetAddressLines: place.addressLines,
-                targetCoordinate: place.coordinate,
+            DirectionPageView(
+                place: place,
                 locationManager: locationManager
             )
         }

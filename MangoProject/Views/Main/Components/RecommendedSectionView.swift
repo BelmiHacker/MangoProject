@@ -20,10 +20,20 @@ struct RecommendedSectionView: View {
 
             VStack(spacing: Spacing.small) {
                 ForEach(places) { place in
-                    RestaurantCardView(
-                        place: place,
-                        onBookmarkTapped: { onBookmarkTapped(place) }
-                    )
+                    if let nearbyPlace = place.nearbyPlace {
+                        NavigationLink(value: nearbyPlace) {
+                            RestaurantCardView(
+                                place: place,
+                                onBookmarkTapped: { onBookmarkTapped(place) }
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        RestaurantCardView(
+                            place: place,
+                            onBookmarkTapped: { onBookmarkTapped(place) }
+                        )
+                    }
                 }
             }
         }
