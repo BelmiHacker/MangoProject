@@ -95,3 +95,14 @@ extension DishDNAStatus {
         }
     }
 }
+
+extension DishDNAStatus {
+    /// Short label shown under the dish name in the collapsed list row.
+    var listStatusLabel: String {
+        switch self {
+        case .halal: return "Safe"
+        case .needsVerification: return "Cautions"
+        case .nonHalal: return "Not Halal"
+        }
+    }
+}

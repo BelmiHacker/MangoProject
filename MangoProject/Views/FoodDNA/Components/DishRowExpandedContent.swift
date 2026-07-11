@@ -31,16 +31,20 @@ struct DishRowExpandedContent: View {
                 FlowLayoutChips(ingredients: dish.detectedIngredients)
 
                 if !dish.concerns.isEmpty {
-                    Text("Potential concerns:")
-                        .font(Typography.cardSubtitle)
-                        .foregroundStyle(Color("TextSecondary"))
-                        .padding(.top, Spacing.xs)
-
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        ForEach(dish.concerns, id: \.self) { concern in
-                            ConcernRow(text: concern, status: dish.status)
+                        Text("Potential concerns:")
+                            .font(Typography.cardSubtitle)
+                            .foregroundStyle(Color("TextSecondary"))
+
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
+                            ForEach(dish.concerns, id: \.self) { concern in
+                                ConcernRow(text: concern, status: dish.status)
+                            }
                         }
                     }
+                    .padding(Spacing.small)
+                    .background(Color("CardBackground").opacity(0.7))
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.small))
                 }
 
                 Text("Please confirm with the restaurant staff for more accurate information.")

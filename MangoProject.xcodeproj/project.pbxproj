@@ -10,6 +10,23 @@
 		97445E7A2FF56CBF00DB148C /* MangoProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MangoProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C1E2FAB42FFEE20700961679 /* Exceptions for "MangoProject" folder in "MangoProject" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				"Views/Profile Page/CollectPointsButton.swift",
+				"Views/Profile Page/FeaturedCard.swift",
+				"Views/Profile Page/ProfileHeaderCard.swift",
+				"Views/Profile Page/ProfileView.swift",
+				"Views/Profile Page/RewardItem.swift",
+				"Views/Profile Page/RewardsSection.swift",
+				"Views/Profile Page/StatCard.swift",
+			);
+			target = 97445E792FF56CBF00DB148C /* MangoProject */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		97445E7C2FF56CBF00DB148C /* MangoProject */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;

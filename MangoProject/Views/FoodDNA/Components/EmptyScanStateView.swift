@@ -4,14 +4,21 @@
 //
 //  Created by Muthiara Putri Aliyu on 10/07/26.
 //
-
+//
+//  EmptyScanStateView.swift
+//  MangoProject
+//
+//  Views/FoodDNA/Components
+//
 
 import SwiftUI
+import PhotosUI
 
-/// Shown when no menu has been scanned yet — the screen's default/reset state.
-/// Purely presentational; FoodDNAView supplies the scan action.
+/// Shown when no menu has been scanned yet. Offers Take Photo / Choose
+/// from Library via a menu, matching standard iOS image-picking UX.
 struct EmptyScanStateView: View {
-    var onScanTapped: () -> Void = {}
+    @Binding var selectedItem: PhotosPickerItem?
+    var onTakePhotoTapped: () -> Void = {}
 
     var body: some View {
         VStack(spacing: Spacing.medium) {
@@ -30,7 +37,15 @@ struct EmptyScanStateView: View {
                     .multilineTextAlignment(.center)
             }
 
-            Button(action: onScanTapped) {
+            Menu {
+                Button(action: onTakePhotoTapped) {
+                    Label("Take Photo", systemImage: "camera")
+                }
+
+                PhotosPicker(selection: $selectedItem, matching: .images, photoLibrary: .shared()) {
+                    Label("Choose from Library", systemImage: "photo.on.rectangle")
+                }
+            } label: {
                 Text("Scan Menu")
                     .font(Typography.cardTitle)
                     .foregroundStyle(.white)
@@ -46,7 +61,7 @@ struct EmptyScanStateView: View {
 }
 
 #Preview {
-    EmptyScanStateView()
+    EmptyScanStateView(selectedItem: .constant(nil))
         .padding()
         .background(Color("AppBackground"))
 }
