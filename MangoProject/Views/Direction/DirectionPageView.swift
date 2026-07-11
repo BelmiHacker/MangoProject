@@ -56,6 +56,8 @@ struct DirectionPageView: View {
                 .presentationBackground(.clear)
                 .presentationCornerRadius(28)
         }
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
         .task {
             await viewModel.fetchRoute()
         }

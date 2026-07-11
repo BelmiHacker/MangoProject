@@ -21,6 +21,7 @@ import SwiftUI
 struct MainView: View {
     @State private var viewModel: MainViewModel
     @State private var showingProfile = false
+    @State private var isNFCScanPresented = false
 
     var onNavigateToPoints: (() -> Void)? = nil
 
@@ -42,7 +43,12 @@ struct MainView: View {
                     }
                 )
 
-                PointsCardView(points: viewModel.userPoints)
+                PointsCardView(
+                    points: viewModel.userPoints,
+                    onTapToCollect: { isNFCScanPresented = true }
+                )
+
+                OffersSectionView()
 
                 if viewModel.hasRecentSearches {
                     RecentSearchSectionView(places: viewModel.recentSearches)
@@ -64,6 +70,25 @@ struct MainView: View {
                 showingProfile = false
                 onNavigateToPoints?()
             })
+        }
+        .navigationDestination(for: NearbyFoodPlace.self) { place in
+            RestaurantDetailView(place: place)
+                .navigationBarBackButtonHidden(true)
+        }
+        .sheet(isPresented: $isNFCScanPresented) {
+            NFCScanSheet(
+                onCancel: { isNFCScanPresented = false },
+                onSuccess: {
+                    viewModel.userPoints += 500
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        isNFCScanPresented = false
+                    }
+                }
+            )
+            .presentationDetents([.height(480)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
+            .presentationBackground(.clear)
         }
     }
 }
