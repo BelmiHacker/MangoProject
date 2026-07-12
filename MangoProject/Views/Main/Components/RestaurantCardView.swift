@@ -65,13 +65,9 @@ struct RestaurantCardView: View {
     }
 
     private var imageThumbnail: some View {
-        RoundedRectangle(cornerRadius: Radius.small)
-            .fill(Color("TextSecondary").opacity(0.15))
-            .overlay {
-                Image(systemName: place.imagePlaceholderSymbol)
-                    .foregroundStyle(Color("TextSecondary"))
-            }
+        RestaurantPhotoView(name: place.name, category: place.categoryDisplayName)
             .frame(width: 88, height: 88)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.small))
     }
 
     private var bookmarkButton: some View {

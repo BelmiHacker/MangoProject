@@ -47,14 +47,10 @@ struct RecentRestaurantCardView: View {
     }
 
     private var imageThumbnail: some View {
-        RoundedRectangle(cornerRadius: Radius.small)
-            .fill(Color("TextSecondary").opacity(0.15))
-            .overlay {
-                Image(systemName: place.imagePlaceholderSymbol)
-                    .foregroundStyle(Color("TextSecondary"))
-            }
+        RestaurantPhotoView(name: place.name, category: place.categoryDisplayName)
             .frame(height: 100)
             .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.small))
     }
 }
 

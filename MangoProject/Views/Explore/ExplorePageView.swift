@@ -19,7 +19,6 @@ struct ExplorePageView: View {
     @State private var focusedPlace: NearbyFoodPlace?
 
     private let regionRefreshTimer = Timer.publish(every: 2.5, on: .main, in: .common).autoconnect()
-    private let focusedDetent = PresentationDetent.height(300)
     private let compactDetent = PresentationDetent.height(80)
 
     var body: some View {
@@ -52,56 +51,55 @@ struct ExplorePageView: View {
         .overlay {
             backButtonOverlay
         }
+        .overlay(alignment: .bottom) {
+            if let place = focusedPlace {
+                ExplorePlaceCard(
+                    place: place,
+                    onClose: {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            focusedPlace = nil
+                        }
+                    },
+                    onDirections: {
+                        selectedPlace = place
+                    }
+                )
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
         .onAppear {
             isSheetPresented = true
             viewModel.onAppear()
         }
         .onChange(of: focusedPlace) { _, newPlace in
             withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                sheetDetent = newPlace != nil ? focusedDetent : .medium
+                isSheetPresented = newPlace == nil
             }
         }
+        .fullScreenCover(item: $selectedPlace) { place in
+            DirectionPageView(place: place, locationManager: viewModel.locationManager)
+        }
+        .fullScreenCover(item: $detailedPlace) { place in
+            RestaurantDetailView(place: place)
+        }
         .sheet(isPresented: $isSheetPresented) {
-            Group {
-                if let place = focusedPlace {
-                    ExplorePlaceCard(
-                        place: place,
-                        onClose: {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                focusedPlace = nil
-                            }
-                        },
-                        onDirections: {
-                            selectedPlace = place
-                        }
-                    )
-                } else {
-                    ExploreSheetContent(
-                        searchText: $viewModel.searchText,
-                        selectedCategories: $viewModel.selectedCategories,
-                        categories: viewModel.categories,
-                        places: viewModel.filteredPlaces,
-                        isSearching: viewModel.isSearching,
-                        isCompact: sheetDetent == compactDetent,
-                        onSelectCategory: viewModel.selectCategory,
-                        onClearSearch: viewModel.clearSearch,
-                        onDirections: { selectedPlace = $0 },
-                        onSelect: { detailedPlace = $0 }
-                    )
-                }
-            }
-            .fullScreenCover(item: $selectedPlace) { place in
-                DirectionPageView(place: place, locationManager: viewModel.locationManager)
-            }
-            .fullScreenCover(item: $detailedPlace) { place in
-                RestaurantDetailView(place: place)
-            }
-            .interactiveDismissDisabled(true)
-            .presentationDetents(
-                focusedPlace != nil ? [focusedDetent] : [compactDetent, .medium, .large],
-                selection: $sheetDetent
+            ExploreSheetContent(
+                searchText: $viewModel.searchText,
+                selectedCategories: $viewModel.selectedCategories,
+                categories: viewModel.categories,
+                places: viewModel.filteredPlaces,
+                isSearching: viewModel.isSearching,
+                isCompact: sheetDetent == compactDetent,
+                onSelectCategory: viewModel.selectCategory,
+                onClearSearch: viewModel.clearSearch,
+                onDirections: { selectedPlace = $0 },
+                onSelect: { detailedPlace = $0 }
             )
-            .presentationDragIndicator(focusedPlace != nil ? .hidden : .visible)
+            .interactiveDismissDisabled(true)
+            .presentationDetents([compactDetent, .medium, .large], selection: $sheetDetent)
+            .presentationDragIndicator(.visible)
             .presentationBackgroundInteraction(.enabled)
             .presentationBackground(.clear)
             .presentationCornerRadius(28)
