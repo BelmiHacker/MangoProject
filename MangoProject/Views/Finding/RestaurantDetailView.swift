@@ -20,9 +20,7 @@ struct RestaurantDetailView: View {
                 VStack(alignment: .leading, spacing: 0) {
 
                     // ── Hero Image ──────────────────────────────────
-                    Image("arabica_storefront")
-                        .resizable()
-                        .scaledToFill()
+                    RestaurantPhotoView(name: place.name, category: place.category)
                         .frame(width: geo.size.width, height: imageHeight)
                         .clipped()
 
@@ -102,7 +100,7 @@ struct RestaurantDetailView: View {
                     .padding(.bottom, 10)
 
                     // ── Photo Strip ─────────────────────────────────
-                    RestaurantPhotoScroll()
+                    RestaurantPhotoScroll(name: place.name, category: place.category)
                 }
             }
             .scrollIndicators(.hidden)

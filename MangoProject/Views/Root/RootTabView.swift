@@ -7,9 +7,7 @@ struct RootTabView: View {
         TabView(selection: $selectedTab) {
             Tab(value: RootTab.home) {
                 NavigationStack {
-                    MainView(onNavigateToPoints: {
-                        selectedTab = .points
-                    })
+                    MainView(onNavigateToPoints: { selectedTab = .points })
                 }
             } label: {
                 Label(RootTab.home.label, systemImage: RootTab.home.icon)

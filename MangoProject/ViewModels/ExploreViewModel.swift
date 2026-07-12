@@ -94,8 +94,8 @@ final class ExploreViewModel: ObservableObject {
         guard !hasCenteredOnUser else { return }
         let region = MKCoordinateRegion(
             center: newLocation.coordinate,
-            latitudinalMeters: 20000,
-            longitudinalMeters: 20000
+            latitudinalMeters: 200,
+            longitudinalMeters: 200
         )
         cameraPosition = .region(region)
         mapRegion = region

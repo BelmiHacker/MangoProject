@@ -72,14 +72,9 @@ struct ExploreRestaurantCard: View {
     }
 
     private var photoStrip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(0..<4, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(.systemGray5))
-                        .frame(width: 82, height: 72)
-                }
-            }
-        }
+        RestaurantPhotoView(name: place.name, category: place.category)
+            .frame(height: 96)
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }

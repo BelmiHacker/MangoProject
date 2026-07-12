@@ -10,18 +10,18 @@ struct ExplorePlaceCard: View {
     var onClose: () -> Void
     var onDirections: () -> Void
 
+    @State private var selectedPhoto: SelectedPhoto?
+
     var body: some View {
-        VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 14) {
-                placeHeader
-                directionsButton
-                photoStrip
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
-            .padding(.bottom, 24)
+        VStack(alignment: .leading, spacing: 14) {
+            placeHeader
+            directionsButton
+            photoStrip
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .background {
             if #available(iOS 26, *) {
@@ -30,6 +30,11 @@ struct ExplorePlaceCard: View {
             } else {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
                     .fill(.ultraThinMaterial)
+            }
+        }
+        .fullScreenCover(item: $selectedPhoto) { photo in
+            ExplorePhotoViewer(photo: photo) {
+                selectedPhoto = nil
             }
         }
     }
@@ -98,17 +103,34 @@ private extension ExplorePlaceCard {
     }
 
     var photoStrip: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<4, id: \.self) { _ in
+        let images = RestaurantPhotoAsset.availableImages(for: place.name)
+
+        return HStack(spacing: 8) {
+            if images.isEmpty {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Color.primary.opacity(0.08))
                     .frame(height: 68)
                     .frame(maxWidth: .infinity)
                     .overlay(
-                        Image(systemName: "photo")
+                        Image(systemName: RestaurantPhotoAsset.categoryIcon(for: place.category))
                             .font(.system(size: 18))
                             .foregroundStyle(.tertiary)
                     )
+            } else {
+                ForEach(Array(images.prefix(4).enumerated()), id: \.offset) { index, uiImage in
+                    Button {
+                        selectedPhoto = SelectedPhoto(image: uiImage)
+                    } label: {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 68)
+                            .frame(maxWidth: .infinity)
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Photo \(index + 1) of \(place.name)")
+                }
             }
         }
     }
