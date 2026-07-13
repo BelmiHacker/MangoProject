@@ -7,45 +7,53 @@ import SwiftUI
 
 struct MyPointsCard: View {
     let points: Int
-    var onCollect: () -> Void = {}
+    var onTapToCollect: () -> Void = {}
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("My Points")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.75))
+        HStack {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("My Points")
+                    .font(Typography.sectionHeader)
+                    .foregroundStyle(.white.opacity(0.85))
 
-            HStack(alignment: .center, spacing: 8) {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 38))
-                    .foregroundStyle(Color("AccentStar"))
+                HStack(spacing: Spacing.xxs) {
+                    Image(systemName: "star.fill")
+                        .foregroundStyle(Color("AccentStar"))
 
-                Text("\(points)")
-                    .font(Typography.screenTitle)
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-
-                Spacer(minLength: 12)
-
-                Button {
-                    onCollect()
-                } label: {
-                    Label("Collect", systemImage: "star.circle.fill")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Color("Accent"))
-                        .padding(.horizontal, 16)
-                        .frame(height: 44)
-                        .background(.white)
-                        .clipShape(Capsule())
+                    Text("\(points)")
+                        .font(Typography.screenTitle)
+                        .foregroundStyle(.white)
+                        .contentTransition(.numericText())
                 }
-                .buttonStyle(.plain)
             }
+
+            Spacer()
+
+            Button(action: { onTapToCollect() }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "wave.3.right")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("Tap To Collect")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                .foregroundStyle(Color(red: 0.11, green: 0.38, blue: 0.29))
+                .padding(.horizontal, 16)
+                .frame(height: 40)
+                .background(.white)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color("Accent"))
-        )
+        .padding(Spacing.cardPadding)
+        .background(Color("Accent"))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.card))
+        .appShadow(Shadow.card)
     }
+}
+
+
+#Preview {
+    MyPointsCard(points: 67)
+        .padding()
+        .background(Color("AppBackground"))
 }

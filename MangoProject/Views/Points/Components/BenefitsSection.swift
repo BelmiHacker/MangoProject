@@ -20,9 +20,9 @@ struct Benefit: Identifiable {
 }
 
 private let tierColors: [Color] = [
-    Color(red: 0.24, green: 0.58, blue: 0.43),  // Free Coffee — medium green
-    Color(red: 0.13, green: 0.42, blue: 0.31),  // 10% Off — rich green
-    Color(red: 0.05, green: 0.24, blue: 0.18),  // Free Dessert — deep forest green
+    Color("Accent") .opacity(0.5),  // Free Coffee — medium green
+    Color("Accent") .opacity(0.75), // 10% Off — rich green
+    Color("Accent") .opacity(1.1), // Free Dessert — deep forest green
 ]
 
 struct BenefitsSection: View {
@@ -33,8 +33,8 @@ struct BenefitsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Benefits")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(.primary)
+                .font(Typography.sectionHeader)
+                .foregroundStyle(Color(.textPrimary))
 
             HStack(spacing: 10) {
                 ForEach(Array(benefits.enumerated()), id: \.element.id) { index, benefit in
@@ -100,7 +100,7 @@ private struct BenefitCard: View {
                         .font(.system(size: 11))
                         .foregroundStyle(.yellow)
                     Text("\(benefit.pointsCost)")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(Typography.sectionHeader)
                         .foregroundStyle(.white)
                 }
                 .frame(maxWidth: .infinity)
@@ -126,3 +126,4 @@ private struct NoDimmingButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.85 : 1)
     }
 }
+

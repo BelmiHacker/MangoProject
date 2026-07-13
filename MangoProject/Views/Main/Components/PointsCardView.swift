@@ -18,7 +18,7 @@ struct PointsCardView: View {
         HStack {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text("My Points")
-                    .font(Typography.cardSubtitle)
+                    .font(Typography.sectionHeader)
                     .foregroundStyle(.white.opacity(0.85))
 
                 HStack(spacing: Spacing.xxs) {
