@@ -17,6 +17,9 @@ enum Radius {
     /// 20pt — standard card radius (restaurant cards, points card, recent search cards)
     static let card: CGFloat = 20
 
+    /// 16pt — Food DNA dish result cards
+    static let dishCard: CGFloat = 16
+
     /// 999pt — fully rounded / pill shape (e.g. circular profile button, tab bar container)
     static let pill: CGFloat = 999
 }

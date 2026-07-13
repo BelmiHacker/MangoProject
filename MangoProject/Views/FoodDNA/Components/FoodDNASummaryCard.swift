@@ -17,7 +17,7 @@ struct FoodDNASummaryCard: View {
     var body: some View {
         HStack(spacing: 0) {
             Rectangle()
-                .fill(darkColor)
+                .fill(status.accentColor)
                 .frame(width: 6)
 
             VStack(alignment: .leading, spacing: Spacing.small) {
@@ -26,40 +26,29 @@ struct FoodDNASummaryCard: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 28, height: 28)
-                        .background(darkColor)
+                        .background(status.accentColor)
                         .clipShape(Circle())
 
                     Text(status.summaryTitle)
                         .font(Typography.cardTitle)
-                        .foregroundStyle(darkColor)
+                        .fontWeight(.bold)
+                        .foregroundStyle(status.accentColor)
                 }
 
                 Text(status.summaryDescription)
                     .font(Typography.bodySecondary)
-                    .foregroundStyle(Color("TextPrimary").opacity(0.75))
+                    .foregroundStyle(Color("DishBodyText"))
             }
             .padding(Spacing.cardPadding)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(lightColor)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.card))
+        .background(status.expandedBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: Radius.dishCard)
+                .stroke(status.cardBorder, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: Radius.dishCard))
         .appShadow(Shadow.card)
-    }
-
-    private var darkColor: Color {
-        switch status {
-        case .halal: return Color("StatusHalalDark")
-        case .needsVerification: return Color("StatusWarningDark")
-        case .nonHalal: return Color("StatusDangerDark")
-        }
-    }
-
-    private var lightColor: Color {
-        switch status {
-        case .halal: return Color("StatusHalalLight")
-        case .needsVerification: return Color("StatusWarningLight")
-        case .nonHalal: return Color("StatusDangerLight")
-        }
     }
 }
 

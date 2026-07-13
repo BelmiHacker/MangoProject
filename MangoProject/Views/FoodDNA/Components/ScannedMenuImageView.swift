@@ -19,9 +19,12 @@ struct ScannedMenuImageView: View {
     var body: some View {
         Group {
             if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
+                ZStack {
+                    Color("TextSecondary").opacity(0.08)
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                }
             } else {
                 Rectangle()
                     .fill(Color("TextSecondary").opacity(0.15))

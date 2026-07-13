@@ -19,6 +19,7 @@ struct FoodDNAView: View {
     @State private var viewModel: FoodDNAViewModel
     @State private var selectedItem: PhotosPickerItem?
     @State private var isShowingCamera = false
+    @State private var isShowingPhotosPicker = false
 
     init(viewModel: FoodDNAViewModel = FoodDNAViewModel()) {
         _viewModel = State(initialValue: viewModel)
@@ -49,6 +50,7 @@ struct FoodDNAView: View {
             }
             .ignoresSafeArea()
         }
+        .photosPicker(isPresented: $isShowingPhotosPicker, selection: $selectedItem, matching: .images)
     }
 
     @ViewBuilder
@@ -71,19 +73,24 @@ struct FoodDNAView: View {
                     .font(Typography.cardSubtitle)
                     .foregroundStyle(Color("TextSecondary"))
 
-                VStack(spacing: 0) {
-                    ForEach(Array(viewModel.dishes.enumerated()), id: \.element.id) { index, dish in
-                        DishRow(dish: dish, isLastRow: index == viewModel.dishes.count - 1)
+                VStack(spacing: Spacing.xs) {
+                    ForEach(viewModel.dishes) { dish in
+                        DishRow(dish: dish)
                     }
                 }
                 .padding(Spacing.small)
                 .background(Color("CardBackground"))
                 .clipShape(RoundedRectangle(cornerRadius: Radius.card))
             }
+
+            Text("AI analysis is not a halal certification.")
+                .font(Typography.caption)
+                .foregroundStyle(Color("DishBodyText"))
+                .frame(maxWidth: .infinity, alignment: .center)
         } else {
             EmptyScanStateView(
-                selectedItem: $selectedItem,
-                onTakePhotoTapped: { isShowingCamera = true }
+                onTakePhotoTapped: { isShowingCamera = true },
+                onChooseFromLibraryTapped: { isShowingPhotosPicker = true }
             )
         }
     }
