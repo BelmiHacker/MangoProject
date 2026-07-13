@@ -17,10 +17,18 @@ struct ExploreRestaurantCard: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
                 placeInfo
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        onSelect()
+                    }
                 Spacer()
                 directionsButton
             }
             photoStrip
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onSelect()
+                }
         }
         .padding(16)
         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -32,9 +40,6 @@ struct ExploreRestaurantCard: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(.regularMaterial)
             }
-        }
-        .onTapGesture {
-            onSelect()
         }
     }
 

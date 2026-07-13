@@ -62,6 +62,9 @@ struct ExplorePageView: View {
                     },
                     onDirections: {
                         selectedPlace = place
+                    },
+                    onSelect: {
+                        detailedPlace = place
                     }
                 )
                 .padding(.horizontal, 16)
@@ -74,15 +77,27 @@ struct ExplorePageView: View {
             viewModel.onAppear()
         }
         .onChange(of: focusedPlace) { _, newPlace in
+            if detailedPlace == nil {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    isSheetPresented = newPlace == nil
+                }
+            }
+        }
+        .onChange(of: detailedPlace) { _, newPlace in
             withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                isSheetPresented = newPlace == nil
+                if newPlace != nil {
+                    isSheetPresented = false
+                } else {
+                    isSheetPresented = focusedPlace == nil
+                }
             }
         }
         .fullScreenCover(item: $selectedPlace) { place in
             DirectionPageView(place: place, locationManager: viewModel.locationManager)
         }
-        .fullScreenCover(item: $detailedPlace) { place in
+        .navigationDestination(item: $detailedPlace) { place in
             RestaurantDetailView(place: place)
+                .navigationBarBackButtonHidden(true)
         }
         .sheet(isPresented: $isSheetPresented) {
             ExploreSheetContent(
@@ -114,12 +129,6 @@ struct ExplorePageView: View {
     }
 
     // MARK: - Back Button
-
-    /// The root `TabView` keeps this tab's view alive across tab switches,
-    /// so `isSheetPresented` never resets on its own the way it did when
-    /// Explore used to be torn down and rebuilt on every visit. Without
-    /// this, the sheet stays presented on top of whichever tab you switch
-    /// to next.
     private func handleBack() {
         isSheetPresented = false
         onBack()

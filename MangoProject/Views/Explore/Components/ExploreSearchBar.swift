@@ -57,12 +57,8 @@ struct ExploreSearchBar: View {
         .padding(.vertical, 12)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .background {
-            if #available(iOS 26, *) {
-                Color.clear
-                    .glassEffect(in: RoundedRectangle(cornerRadius: 14))
-            } else {
-                Color(.systemGray6)
-            }
+            Color.clear
+                .glassEffect(in: RoundedRectangle(cornerRadius: 14))
         }
         .onDisappear {
             speechRecognizer.stopTranscribing()
