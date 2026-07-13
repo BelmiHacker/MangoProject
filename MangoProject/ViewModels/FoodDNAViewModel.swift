@@ -15,6 +15,7 @@ final class FoodDNAViewModel {
     var dishes: [DishDisplayModel] = []
     var isAnalyzing: Bool = false
     var errorMessage: String?
+    var scannedImage: UIImage?
 
     private let service = FoodDNAAnalysisService()
 
@@ -35,6 +36,7 @@ final class FoodDNAViewModel {
     func analyzeMenu(image: UIImage) async {
         isAnalyzing = true
         errorMessage = nil
+        scannedImage = image
 
         do {
             let result = try await service.analyzeMenu(image: image)
@@ -52,6 +54,7 @@ final class FoodDNAViewModel {
         hasScannedMenu = false
         dishes = []
         errorMessage = nil
+        scannedImage = nil
     }
 
     /// Maps a raw backend MenuItemAnalysis into the UI-facing DishDisplayModel.
