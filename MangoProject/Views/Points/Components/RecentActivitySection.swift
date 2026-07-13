@@ -31,8 +31,9 @@ struct RecentActivitySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent Activity")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(.primary)
+                .font(Typography.sectionHeader)
+                .foregroundStyle(Color(.textPrimary))
+
 
             VStack(spacing: 0) {
                 ForEach(items) { item in

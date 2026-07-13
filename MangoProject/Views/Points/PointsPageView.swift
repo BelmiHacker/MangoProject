@@ -15,8 +15,7 @@ struct PointsPageView: View {
             VStack(alignment: .leading, spacing: 24) {
                 headerText
                 MyPointsCard(
-                    points: points,
-                    onCollect: { isCollectMethodPresented = true }
+                    points: points
                 )
                 BenefitsSection(
                     benefits: Benefit.samples,
@@ -47,12 +46,12 @@ struct PointsPageView: View {
     private var headerText: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Halal Rewards")
-                .font(.system(size: 34, weight: .bold))
-                .foregroundStyle(.primary)
+                .font(Typography.screenTitle)
+                .foregroundStyle(Color(.textPrimary))
 
             Text("Earn points by tapping NFC at participating Halal Restaurant")
-                .font(.system(size: 14, weight: .regular))
-                .foregroundStyle(.secondary)
+                .font(Typography.bodySecondary)
+                .foregroundStyle(Color("TextSecondary"))
         }
     }
 }

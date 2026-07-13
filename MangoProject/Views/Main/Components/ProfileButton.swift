@@ -17,7 +17,7 @@ struct ProfileButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "person.circle.fill")
-                .font(.system(size: 32))
+                .font(.system(size: 38))
                 .foregroundStyle(Color("TextPrimary"), Color("CardBackground"))
         }
         .accessibilityLabel("Profile")
