@@ -5,12 +5,22 @@ struct RestaurantDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: RestaurantDetailViewModel
     @State private var showingDirections = false
-    
-    init(place: NearbyFoodPlace) {
+    var onFinished: (() -> Void)? = nil
+
+    init(place: NearbyFoodPlace, onFinished: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: RestaurantDetailViewModel(place: place))
+        self.onFinished = onFinished
     }
-    
+
     private var place: NearbyFoodPlace { viewModel.place }
+
+    /// Closes this detail screen and forwards up so the presenter can clear
+    /// its own state (and switch tabs back to Home, if it's able to).
+    private func finishAfterArrival() {
+        showingDirections = false
+        dismiss()
+        onFinished?()
+    }
     
     var body: some View {
         GeometryReader { geo in
@@ -115,7 +125,11 @@ struct RestaurantDetailView: View {
         }
         .onAppear { viewModel.loadDetails() }
         .fullScreenCover(isPresented: $showingDirections) {
-            DirectionPageView(place: place, locationManager: AppLocationManager())
+            DirectionPageView(
+                place: place,
+                locationManager: AppLocationManager(),
+                onFinished: finishAfterArrival
+            )
         }
     }
 }

@@ -9,6 +9,7 @@ import Combine
 import CoreLocation
 import MapKit
 import SwiftUI
+import UIKit
 
 struct FindingExperienceView: View {
     @Environment(\.dismiss) private var dismiss
@@ -19,9 +20,18 @@ struct FindingExperienceView: View {
     let targetLocationName: String
     let targetAddressLines: [String]
     let targetCoordinate: CLLocationCoordinate2D?
+    var onArrivedFinish: () -> Void = {}
 
     private let compactDetent = PresentationDetent.height(104)
     private let mediumDetent = PresentationDetent.fraction(0.52)
+    private let arrivalThresholdMeters: CLLocationDistance = 2
+
+    /// Within this range, per-step route breakdown (bearing, instruction
+    /// text, and the step carousel) is ignored in favor of a single reading
+    /// straight to the destination — MapKit's route steps can otherwise show
+    /// a short segment's own length (e.g. "2 m" for the current road) that
+    /// has nothing to do with the true remaining distance to the target.
+    private let closeRangeMeters: CLLocationDistance = 10
 
     @ObservedObject private var locationManager: AppLocationManager
     @State private var isPlaceSheetPresented = true
@@ -33,8 +43,20 @@ struct FindingExperienceView: View {
     @State private var isLoadingRoute = false
     @State private var lastRouteAttemptDate: Date?
     @State private var lastRouteAttemptOrigin: CLLocationCoordinate2D?
+    @State private var hasArrived = false
+    @State private var isShowingArrivedView = false
+    @State private var lastProximityHapticDate: Date?
 
-    private let distanceSmoothingTimer = Timer.publish(every: 0.08, on: .main, in: .common).autoconnect()
+    // Must be @State, not a plain `let` — this View re-initializes its
+    // struct on every GPS update (it observes `locationManager.location`),
+    // and a `let` Combine publisher would be rebuilt from scratch each time,
+    // constantly tearing down and resubscribing `.onReceive` below before
+    // the timer ever got a chance to fire. That silently starved
+    // `updateDisplayedDistance()` — the one place the arrival check lives —
+    // of ticks, which is why arrival could fail to trigger even once the
+    // screen displayed "0 m".
+    @State private var distanceSmoothingTimer = Timer.publish(every: 0.08, on: .main, in: .common).autoconnect()
+    private let proximityHapticStartMeters: CLLocationDistance = 10
 
     init(
         targetName: String = "Tamper Coffee",
@@ -43,7 +65,8 @@ struct FindingExperienceView: View {
         targetLocationName: String = "The Breeze",
         targetAddressLines: [String] = ["Sampora", "Tangerang", "Banten", "Indonesia"],
         targetCoordinate: CLLocationCoordinate2D? = nil,
-        locationManager: AppLocationManager = AppLocationManager()
+        locationManager: AppLocationManager = AppLocationManager(),
+        onArrivedFinish: @escaping () -> Void = {}
     ) {
         self.targetName = targetName
         self.targetDistanceText = targetDistanceText
@@ -52,12 +75,28 @@ struct FindingExperienceView: View {
         self.targetAddressLines = targetAddressLines
         self.targetCoordinate = targetCoordinate
         self.locationManager = locationManager
+        self.onArrivedFinish = onArrivedFinish
+    }
+
+    /// True once the live GPS distance to the target is within
+    /// `closeRangeMeters` — the point where per-step route breakdown stops
+    /// being trustworthy/useful and a single direct reading takes over.
+    private var isCloseToDestination: Bool {
+        guard let liveDistanceMeters else {
+            return false
+        }
+        return liveDistanceMeters <= closeRangeMeters
     }
 
     private var findingState: FindingNavigationState {
-        let steps = navigationSteps.isEmpty
+        let usesSingleStepFallback = navigationSteps.isEmpty || isCloseToDestination
+        let steps = usesSingleStepFallback
             ? [NavigationStep(id: 0, instruction: instructionText, distanceText: displayedDistanceText, symbolName: "arrow.up")]
             : navigationSteps
+        // The fallback array only ever has one entry (id 0) — reporting the
+        // real route's step index here would ask the carousel to select a
+        // page that doesn't exist in `steps`.
+        let stepProgress = usesSingleStepFallback ? 0 : stepProgressIndex
         return FindingNavigationState(
             targetName: targetName,
             distanceText: displayedDistanceText,
@@ -66,7 +105,7 @@ struct FindingExperienceView: View {
             arrowAngle: arrowDisplayAngle,
             instructionDistanceText: displayedDistanceText,
             instructionText: instructionText,
-            stepProgress: stepProgressIndex,
+            stepProgress: stepProgress,
             stepCount: steps.count,
             proximityProgress: displayedProximityProgress,
             steps: steps
@@ -110,6 +149,9 @@ struct FindingExperienceView: View {
                     .presentationBackground(.clear)
                     .presentationBackgroundInteraction(.enabled(upThrough: mediumDetent))
                     .interactiveDismissDisabled()
+            }
+            .fullScreenCover(isPresented: $isShowingArrivedView) {
+                ArrivedView(targetName: targetName, onBackToHome: onArrivedFinish)
             }
     }
 }
@@ -200,7 +242,7 @@ private extension FindingExperienceView {
             return String(format: "%.1f km", distance / 1_000)
         }
 
-        return "\(Int(distance.rounded())) m"
+        return "\(Int(distance.rounded())) meter"
     }
 
     var proximityProgress: Double {
@@ -229,19 +271,96 @@ private extension FindingExperienceView {
             return
         }
 
-        guard let currentDistance = displayedDistanceMeters else {
+        if let currentDistance = displayedDistanceMeters {
+            let delta = targetDistance - currentDistance
+            displayedDistanceMeters = abs(delta) > 1 ? currentDistance + (delta > 0 ? 1 : -1) : targetDistance
+        } else {
             displayedDistanceMeters = targetDistance
+        }
+
+        // Check arrival against whichever of the raw GPS reading or the
+        // (slightly lagging) smoothed on-screen value is smaller, so arrival
+        // always fires by the time the screen shows a number at or under the
+        // threshold — never a case where the display reads "0 m" but nothing
+        // happens because the two values momentarily disagreed.
+        let effectiveDistance = min(targetDistance, displayedDistanceMeters ?? targetDistance)
+
+        if !hasArrived, effectiveDistance <= arrivalThresholdMeters {
+            hasArrived = true
+            triggerArrivalHaptics()
+
+            // A View can't present a sheet and a fullScreenCover at the same
+            // time — `isPlaceSheetPresented` is already up for the entire
+            // navigation experience, so ArrivedView's presentation request
+            // would otherwise get silently dropped. Dismiss the sheet first,
+            // then bring in ArrivedView once that's had time to animate out.
+            isPlaceSheetPresented = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                isShowingArrivedView = true
+            }
+        } else {
+            updateProximityHaptics(distance: effectiveDistance)
+        }
+    }
+
+    /// A few spaced-out success taps rather than one, so arrival reads as a
+    /// distinct, unmistakable moment rather than blending into the regular
+    /// GPS-update haptics an OS might otherwise coalesce a single tap into.
+    func triggerArrivalHaptics() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+
+        for tapIndex in 0..<4 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(tapIndex) * 0.35) {
+                generator.notificationOccurred(.success)
+            }
+        }
+    }
+
+    /// "Getting warmer" haptics, like Find My's precision finding: starting
+    /// at `proximityHapticStartMeters`, pulses fire more often and more
+    /// strongly the closer the live GPS distance gets, until arrival hands
+    /// off to `triggerArrivalHaptics()`.
+    func updateProximityHaptics(distance: CLLocationDistance) {
+        guard distance <= proximityHapticStartMeters else {
             return
         }
 
-        let delta = targetDistance - currentDistance
-
-        guard abs(delta) > 1 else {
-            displayedDistanceMeters = targetDistance
+        let requiredInterval = proximityHapticInterval(forDistance: distance)
+        if let lastProximityHapticDate, Date().timeIntervalSince(lastProximityHapticDate) < requiredInterval {
             return
         }
 
-        displayedDistanceMeters = currentDistance + (delta > 0 ? 1 : -1)
+        let generator = UIImpactFeedbackGenerator(style: .rigid)
+        generator.prepare()
+        generator.impactOccurred(intensity: proximityHapticIntensity(forDistance: distance))
+        lastProximityHapticDate = Date()
+    }
+
+    /// `arrivalThresholdMeters` → fires every ~0.12s (fastest),
+    /// `proximityHapticStartMeters` → ~0.9s (slowest).
+    func proximityHapticInterval(forDistance distance: CLLocationDistance) -> TimeInterval {
+        let progress = proximityProgress(forDistance: distance)
+        let fastestInterval = 0.12
+        let slowestInterval = 0.9
+        return slowestInterval - progress * (slowestInterval - fastestInterval)
+    }
+
+    /// `arrivalThresholdMeters` → full intensity (1.0), `proximityHapticStartMeters` → faintest (0.4).
+    func proximityHapticIntensity(forDistance distance: CLLocationDistance) -> CGFloat {
+        let progress = proximityProgress(forDistance: distance)
+        let weakestIntensity: CGFloat = 0.4
+        let strongestIntensity: CGFloat = 1.0
+        return weakestIntensity + CGFloat(progress) * (strongestIntensity - weakestIntensity)
+    }
+
+    /// 0 at `proximityHapticStartMeters`, 1 at `arrivalThresholdMeters` (or
+    /// closer) — full intensity/frequency is reached right at the arrival
+    /// boundary, so the last pulse before "You Have Arrived" takes over
+    /// already feels like a peak, not something still ramping up.
+    func proximityProgress(forDistance distance: CLLocationDistance) -> Double {
+        let clamped = min(max(distance, arrivalThresholdMeters), proximityHapticStartMeters)
+        return 1 - (clamped - arrivalThresholdMeters) / (proximityHapticStartMeters - arrivalThresholdMeters)
     }
 
     var relativeBearing: Double? {
@@ -260,13 +379,22 @@ private extension FindingExperienceView {
             return nil
         }
 
+        guard let targetCoordinate else {
+            return nil
+        }
+
+        // Once close to the destination, point straight at it instead of
+        // still following the calculated route's bearing. MapKit's route
+        // can otherwise send you toward the nearest known path first (e.g.
+        // "Proceed to the route") even when the destination is right there
+        // — confusing and pointless this close in.
+        if isCloseToDestination {
+            return bearingDegrees(from: userCoordinate, to: targetCoordinate)
+        }
+
         if routeCoordinates.count > 1,
            let routeBearing = routeBearing(from: userCoordinate) {
             return routeBearing
-        }
-
-        guard let targetCoordinate else {
-            return nil
         }
 
         return bearingDegrees(from: userCoordinate, to: targetCoordinate)
@@ -309,7 +437,7 @@ private extension FindingExperienceView {
             if instruction.distanceMeters >= 1000 {
                 distanceText = String(format: "%.1f km", instruction.distanceMeters / 1000)
             } else if instruction.distanceMeters > 0 {
-                distanceText = "\(Int(instruction.distanceMeters.rounded())) m"
+                distanceText = "\(Int(instruction.distanceMeters.rounded())) meter"
             } else {
                 distanceText = displayedDistanceText
             }
@@ -325,6 +453,13 @@ private extension FindingExperienceView {
     var instructionText: String {
         guard targetCoordinate != nil else {
             return "Finding target"
+        }
+
+        // Mirrors destinationBearing: this close in, ignore route-correction
+        // instructions like "Proceed to the route" and just say to head
+        // toward the target, matching the arrow.
+        if isCloseToDestination {
+            return "Head toward \(targetName)"
         }
 
         if let routeInstructionText {

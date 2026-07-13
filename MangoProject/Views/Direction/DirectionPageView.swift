@@ -12,6 +12,7 @@ struct DirectionPageView: View {
 
     let place: NearbyFoodPlace
     let locationManager: AppLocationManager
+    var onFinished: (() -> Void)? = nil
 
     @StateObject private var viewModel: DirectionViewModel
     @State private var isNavigating = false
@@ -19,13 +20,27 @@ struct DirectionPageView: View {
 
     private let compactDetent = PresentationDetent.height(100)
 
-    init(place: NearbyFoodPlace, locationManager: AppLocationManager) {
+    init(
+        place: NearbyFoodPlace,
+        locationManager: AppLocationManager,
+        onFinished: (() -> Void)? = nil
+    ) {
         self.place = place
         self.locationManager = locationManager
+        self.onFinished = onFinished
         _viewModel = StateObject(wrappedValue: DirectionViewModel(
             destination: place,
             locationManager: locationManager
         ))
+    }
+
+    /// Closes the walking-navigation screen, this direction screen, and
+    /// forwards up so the presenter can clear its own state (and switch
+    /// tabs back to Home, if it's able to).
+    private func finishAfterArrival() {
+        isNavigating = false
+        dismiss()
+        onFinished?()
     }
 
     private var isCompact: Bool { sheetDetent == compactDetent }
@@ -46,7 +61,8 @@ struct DirectionPageView: View {
                         targetLocationName: "Apple Maps",
                         targetAddressLines: place.addressLines,
                         targetCoordinate: place.coordinate,
-                        locationManager: locationManager
+                        locationManager: locationManager,
+                        onArrivedFinish: finishAfterArrival
                     )
                 }
                 .interactiveDismissDisabled(true)
@@ -191,12 +207,6 @@ struct DirectionPageView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                } else if let errMsg = viewModel.errorMessage {
-                    Text(errMsg)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
                 } else {
                     HStack(spacing: 0) {
                         Image(systemName: "figure.walk")
@@ -223,6 +233,18 @@ struct DirectionPageView: View {
                         Spacer()
                     }
                     .padding(.horizontal, 4)
+
+                    // No formal route doesn't block navigation — we still
+                    // know the straight-line distance/time above, and
+                    // FindingExperienceView guides by direct GPS bearing
+                    // when there's no route polyline to follow.
+                    if viewModel.errorMessage != nil {
+                        Text("No walking route found — you'll be guided straight to the location instead.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 4)
+                    }
                 }
 
                 Button {
@@ -233,15 +255,11 @@ struct DirectionPageView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 60)
-                        .background(
-                            viewModel.route != nil
-                                ? Color.green
-                                : Color(.systemGray3)
-                        )
+                        .background(viewModel.isLoading ? Color(.systemGray3) : Color.green)
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 .buttonStyle(.plain)
-                .disabled(viewModel.route == nil)
+                .disabled(viewModel.isLoading)
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)

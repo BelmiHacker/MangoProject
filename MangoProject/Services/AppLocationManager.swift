@@ -79,18 +79,34 @@ extension AppLocationManager: CLLocationManagerDelegate {
             return
         }
 
-        // Reject readings with poor accuracy — this is the main cause of
-        // the distance jumping when GPS signal is weak. A reading with
-        // horizontalAccuracy > 80m means the coordinate could be off by
-        // up to 80m from the real position, which makes distance calculations
-        // wildly unreliable. We freeze the last good value instead.
-        guard latestLocation.horizontalAccuracy >= 0,
-              latestLocation.horizontalAccuracy <= 80 else {
+        guard latestLocation.horizontalAccuracy >= 0 else {
             return
         }
 
-        // Only update if the new reading is meaningfully better or different
-        if let existing = location {
+        // How long since our last accepted fix. Indoors (malls block GPS),
+        // accuracy can stay above the "good" threshold indefinitely — if we
+        // only ever accept great fixes, `location` freezes forever and the
+        // distance readout never moves even though the user is walking.
+        let staleness = location.map { abs($0.timestamp.timeIntervalSinceNow) } ?? .infinity
+        let isStale = staleness > 8
+
+        // A reading this poor (100s/1000s of meters) is a last-resort
+        // cell/wifi estimate, not a real fix — never accept those, even
+        // when stale, since they'd make the distance jump wildly instead
+        // of just being frozen.
+        guard latestLocation.horizontalAccuracy <= 300 else {
+            return
+        }
+
+        let isAccurateEnough = latestLocation.horizontalAccuracy <= 80
+
+        guard isAccurateEnough || isStale else {
+            return
+        }
+
+        // Only de-noise against the existing fix when we're not stale —
+        // once stale, any usable reading is better than staying frozen.
+        if !isStale, let existing = location {
             let isMoreAccurate = latestLocation.horizontalAccuracy < existing.horizontalAccuracy
             let hasMoved = latestLocation.distance(from: existing) > 2
             guard isMoreAccurate || hasMoved else {

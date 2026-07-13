@@ -20,6 +20,16 @@ final class MainMapViewModel: ObservableObject {
     private var lastSearchRadius: CLLocationDistance?
 
     private let csvPlaces: [CSVPlace] = CSVDataLoader.loadAll()
+
+    #if DEBUG
+    /// Testing aid only (stripped from release builds): a fake POI placed
+    /// ~10m from wherever the user's location was when first available, so
+    /// the walking-navigation distance readout can be tested by walking a
+    /// short, real distance to a tappable pin instead of needing a real
+    /// restaurant far away. Computed once and cached so it doesn't drift
+    /// as the user moves.
+    private var debugNearbyTestPlace: NearbyFoodPlace?
+    #endif
     
     var datasetCategories: [String] {
         let halalPlaces = csvPlaces.filter { $0.halalFound && !$0.type.isEmpty }
@@ -66,6 +76,15 @@ final class MainMapViewModel: ObservableObject {
             newPlaces.append(nearbyPlace)
         }
         
+        #if DEBUG
+        if debugNearbyTestPlace == nil, let userLocation {
+            debugNearbyTestPlace = Self.makeDebugNearbyTestPlace(near: userLocation.coordinate)
+        }
+        if let debugNearbyTestPlace {
+            newPlaces.append(debugNearbyTestPlace)
+        }
+        #endif
+
         places = newPlaces
             .sorted { ($0.distanceInMeters ?? Double.greatestFiniteMagnitude) < ($1.distanceInMeters ?? Double.greatestFiniteMagnitude) }
 
@@ -81,6 +100,44 @@ final class MainMapViewModel: ObservableObject {
 }
 
 private extension MainMapViewModel {
+    #if DEBUG
+    /// Builds a fake, tappable POI ~10m north of `coordinate`. Flows through
+    /// the exact same tap → card → Directions → Go pipeline as a real place,
+    /// since it's just a normal `NearbyFoodPlace`.
+    static func makeDebugNearbyTestPlace(near coordinate: CLLocationCoordinate2D) -> NearbyFoodPlace {
+        let earthRadiusMeters = 6_371_000.0
+        let angularDistance = 10.0 / earthRadiusMeters
+        let latRadians = coordinate.latitude * .pi / 180
+
+        let newLatRadians = latRadians + angularDistance
+        let dummyCoordinate = CLLocationCoordinate2D(
+            latitude: newLatRadians * 180 / .pi,
+            longitude: coordinate.longitude
+        )
+
+        let placemark = MKPlacemark(coordinate: dummyCoordinate)
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = "Test Spot (10m)"
+
+        return NearbyFoodPlace(
+            id: "debug-nearby-test-place",
+            name: "Test Spot (10m)",
+            address: "",
+            category: "Test",
+            coordinate: dummyCoordinate,
+            phoneNumber: nil,
+            url: nil,
+            distanceInMeters: 10,
+            mapItem: mapItem,
+            businessName: nil,
+            certificateNumber: nil,
+            certificateIssueDate: nil,
+            totalProducts: nil,
+            isHalal: true
+        )
+    }
+    #endif
+
     func shouldSkipSearch(center: CLLocation, radius: CLLocationDistance) -> Bool {
         guard let lastSearchCenter, let lastSearchRadius, !places.isEmpty else {
             return false
