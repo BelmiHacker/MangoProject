@@ -6,20 +6,21 @@
 import SwiftUI
 
 struct PointsPageView: View {
-    @State private var isCollectMethodPresented = false
+    var pointsStore: UserPointsStore = UserPointsStore()
+    @State private var isNFCScanPresented = false
     @State private var redeemingBenefit: Benefit?
-    @State private var points = 67
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 headerText
                 MyPointsCard(
-                    points: points
+                    points: pointsStore.points,
+                    onTapToCollect: { isNFCScanPresented = true }
                 )
                 BenefitsSection(
                     benefits: Benefit.samples,
-                    points: points,
+                    points: pointsStore.points,
                     onRedeem: { redeemingBenefit = $0 }
                 )
                 RecentActivitySection(items: ActivityItem.samples)
@@ -29,11 +30,20 @@ struct PointsPageView: View {
             .padding(.bottom, 40)
         }
         .background(Color("AppBackground").ignoresSafeArea())
-        .fullScreenCover(isPresented: $isCollectMethodPresented) {
-            CollectPointsMethodView(
-                onCancel: { isCollectMethodPresented = false },
-                onCollected: { points += 500 }
+        .sheet(isPresented: $isNFCScanPresented) {
+            NFCScanSheet(
+                onCancel: { isNFCScanPresented = false },
+                onSuccess: {
+                    pointsStore.points += 500
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        isNFCScanPresented = false
+                    }
+                }
             )
+            .presentationDetents([.height(480)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
+            .presentationBackground(.clear)
         }
         .fullScreenCover(item: $redeemingBenefit) { benefit in
             RedeemBenefitQRView(

@@ -20,6 +20,7 @@ import SwiftUI
 /// and renders it, without containing any business logic itself.
 struct MainView: View {
     @State private var viewModel: MainViewModel
+    var pointsStore: UserPointsStore
     @State private var showingProfile = false
     @State private var isNFCScanPresented = false
 
@@ -28,8 +29,13 @@ struct MainView: View {
     /// Accepts an optional pre-configured view model, primarily so previews
     /// and future tests can inject specific states (e.g. with recent searches
     /// already populated) instead of always starting from defaults.
-    init(viewModel: MainViewModel = MainViewModel(), onNavigateToPoints: (() -> Void)? = nil) {
+    init(
+        viewModel: MainViewModel = MainViewModel(),
+        pointsStore: UserPointsStore = UserPointsStore(),
+        onNavigateToPoints: (() -> Void)? = nil
+    ) {
         _viewModel = State(initialValue: viewModel)
+        self.pointsStore = pointsStore
         self.onNavigateToPoints = onNavigateToPoints
     }
 
@@ -44,7 +50,7 @@ struct MainView: View {
                 )
 
                 PointsCardView(
-                    points: viewModel.userPoints,
+                    points: pointsStore.points,
                     onTapToCollect: { isNFCScanPresented = true }
                 )
 
@@ -79,7 +85,7 @@ struct MainView: View {
             NFCScanSheet(
                 onCancel: { isNFCScanPresented = false },
                 onSuccess: {
-                    viewModel.userPoints += 500
+                    pointsStore.points += 500
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                         isNFCScanPresented = false
                     }
