@@ -12,13 +12,12 @@
 //
 
 import SwiftUI
-import PhotosUI
 
 /// Shown when no menu has been scanned yet. Offers Take Photo / Choose
 /// from Library via a menu, matching standard iOS image-picking UX.
 struct EmptyScanStateView: View {
-    @Binding var selectedItem: PhotosPickerItem?
     var onTakePhotoTapped: () -> Void = {}
+    var onChooseFromLibraryTapped: () -> Void = {}
 
     var body: some View {
         VStack(spacing: Spacing.medium) {
@@ -42,7 +41,7 @@ struct EmptyScanStateView: View {
                     Label("Take Photo", systemImage: "camera")
                 }
 
-                PhotosPicker(selection: $selectedItem, matching: .images, photoLibrary: .shared()) {
+                Button(action: onChooseFromLibraryTapped) {
                     Label("Choose from Library", systemImage: "photo.on.rectangle")
                 }
             } label: {
@@ -61,7 +60,7 @@ struct EmptyScanStateView: View {
 }
 
 #Preview {
-    EmptyScanStateView(selectedItem: .constant(nil))
+    EmptyScanStateView()
         .padding()
         .background(Color("AppBackground"))
 }

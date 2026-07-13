@@ -12,64 +12,64 @@ import SwiftUI
 /// transforms into a colored, bordered card revealing full detail.
 struct DishRow: View {
     let dish: DishDisplayModel
-    var isLastRow: Bool = false
     @State private var isExpanded: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                     isExpanded.toggle()
                 }
             } label: {
                 header
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+            .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "see the full analysis")")
 
             if isExpanded {
                 DishRowExpandedContent(dish: dish)
                     .padding(.top, Spacing.small)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
-
-            if !isExpanded && !isLastRow {
-                Divider()
-                    .padding(.top, Spacing.small)
-            }
         }
-        .padding(isExpanded ? Spacing.cardPadding : 0)
-        .padding(.top, isExpanded ? 0 : Spacing.small)
-        .background(isExpanded ? tintColor : Color.clear)
+        .padding(isExpanded ? Spacing.cardPadding : Spacing.small)
+        .background(isExpanded ? dish.status.expandedBackground : Color("CardBackground"))
         .overlay {
             if isExpanded {
-                RoundedRectangle(cornerRadius: Radius.card)
-                    .stroke(darkColor, lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: Radius.dishCard)
+                    .stroke(dish.status.cardBorder, lineWidth: 1)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: Radius.card))
+        .clipShape(RoundedRectangle(cornerRadius: Radius.dishCard))
     }
 
     private var header: some View {
         HStack(spacing: Spacing.small) {
             ZStack {
                 Circle()
-                    .fill(isExpanded ? .white.opacity(0.6) : tintColor)
+                    .fill(isExpanded ? Color("CardBackground") : dish.status.badgeBackground)
                     .frame(width: 36, height: 36)
 
                 Image(systemName: dish.status.iconName)
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(darkColor)
+                    .foregroundStyle(dish.status.iconGlyphColor)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(dish.name)
                     .font(Typography.cardTitle)
-                    .foregroundStyle(Color("TextPrimary"))
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color("DishTitleText"))
 
-                if !isExpanded {
-                    Text(dish.status.listStatusLabel)
+                if isExpanded {
+                    DishStatusBadge(status: dish.status)
+                } else {
+                    Text(dish.status.badgeLabel)
                         .font(Typography.caption)
-                        .foregroundStyle(darkColor)
+                        .foregroundStyle(dish.status.accentColor)
                 }
             }
 
@@ -77,33 +77,17 @@ struct DishRow: View {
 
             Image(systemName: "chevron.down")
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Color("TextSecondary"))
+                .foregroundStyle(Color("DishBodyText"))
                 .rotationEffect(.degrees(isExpanded ? 180 : 0))
-        }
-    }
-
-    private var darkColor: Color {
-        switch dish.status {
-        case .halal: return Color("StatusHalalDark")
-        case .needsVerification: return Color("StatusWarningDark")
-        case .nonHalal: return Color("StatusDangerDark")
-        }
-    }
-
-    private var tintColor: Color {
-        switch dish.status {
-        case .halal: return Color("StatusHalalLight")
-        case .needsVerification: return Color("StatusWarningLight")
-        case .nonHalal: return Color("StatusDangerLight")
         }
     }
 }
 
 #Preview {
     ScrollView {
-        VStack(spacing: 0) {
-            ForEach(Array(DishDisplayModel.mockList.enumerated()), id: \.element.id) { index, dish in
-                DishRow(dish: dish, isLastRow: index == DishDisplayModel.mockList.count - 1)
+        VStack(spacing: Spacing.xs) {
+            ForEach(DishDisplayModel.mockList) { dish in
+                DishRow(dish: dish)
             }
         }
         .padding()

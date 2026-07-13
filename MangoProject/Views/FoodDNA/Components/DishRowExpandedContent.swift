@@ -7,50 +7,41 @@
 
 import SwiftUI
 
-/// The content shown inside a DishRow when expanded. Layout differs by
-/// status: halal dishes show a plain summary sentence; needsVerification
-/// and nonHalal dishes show detected ingredients + potential concerns.
+/// The content shown inside a DishRow when expanded. Always structured the
+/// same way regardless of status — why the model reached this status, and
+/// the ingredients it detected — so every card carries the same depth of detail.
 struct DishRowExpandedContent: View {
     let dish: DishDisplayModel
 
+    /// The model's reason for this status. Stored as `summaryText` for
+    /// halal dishes and as the sole `concerns` entry otherwise — same
+    /// underlying "why" data, just shaped differently by the mapping layer.
+    private var reasonText: String {
+        dish.summaryText ?? dish.concerns.first ?? "No explanation was provided for this dish."
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
-            switch dish.status {
-            case .halal:
-                if let summaryText = dish.summaryText {
-                    Text(summaryText)
-                        .font(Typography.bodySecondary)
-                        .foregroundStyle(Color("TextSecondary"))
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                ExpandedSectionHeader(
+                    icon: dish.status.iconName,
+                    title: dish.status.reasonSectionTitle,
+                    tint: dish.status.accentColor
+                )
+                Text(reasonText)
+                    .font(Typography.bodySecondary)
+                    .foregroundStyle(Color("DishBodyText"))
+            }
+
+            if !dish.detectedIngredients.isEmpty {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                    ExpandedSectionHeader(
+                        icon: "list.bullet",
+                        title: "Detected ingredients",
+                        tint: dish.status.accentColor
+                    )
+                    FlowLayoutChips(ingredients: dish.detectedIngredients)
                 }
-
-            case .needsVerification, .nonHalal:
-                Text("Detected ingredients:")
-                    .font(Typography.cardSubtitle)
-                    .foregroundStyle(Color("TextSecondary"))
-
-                FlowLayoutChips(ingredients: dish.detectedIngredients)
-
-                if !dish.concerns.isEmpty {
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text("Potential concerns:")
-                            .font(Typography.cardSubtitle)
-                            .foregroundStyle(Color("TextSecondary"))
-
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            ForEach(dish.concerns, id: \.self) { concern in
-                                ConcernRow(text: concern, status: dish.status)
-                            }
-                        }
-                    }
-                    .padding(Spacing.small)
-                    .background(Color("CardBackground").opacity(0.7))
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.small))
-                }
-
-                Text("Please confirm with the restaurant staff for more accurate information.")
-                    .font(Typography.caption)
-                    .foregroundStyle(Color("TextSecondary"))
-                    .padding(.top, Spacing.xs)
             }
         }
     }
