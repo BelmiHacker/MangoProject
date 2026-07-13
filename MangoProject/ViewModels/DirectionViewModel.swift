@@ -54,9 +54,37 @@ final class DirectionViewModel: ObservableObject {
         route?.steps.filter { !$0.instructions.isEmpty } ?? []
     }
 
+    /// Straight-line distance to the destination, used whenever MapKit
+    /// couldn't calculate a formal walking route (e.g. dense food-stall
+    /// areas or paths Apple's map data doesn't cover) — we still know
+    /// roughly how far and how long it'll take, so navigation isn't blocked.
+    private var straightLineDistanceMeters: CLLocationDistance? {
+        guard let userLocation = locationManager.location else { return nil }
+        let destinationLocation = CLLocation(
+            latitude: destination.coordinate.latitude,
+            longitude: destination.coordinate.longitude
+        )
+        return userLocation.distance(from: destinationLocation)
+    }
+
+    /// Average walking speed (~4.9 km/h) used to estimate travel time when
+    /// there's no route to read `expectedTravelTime` from.
+    private var estimatedWalkingSeconds: TimeInterval? {
+        guard let straightLineDistanceMeters else { return nil }
+        return straightLineDistanceMeters / 1.35
+    }
+
     var durationText: String {
-        guard let route else { return "--" }
-        let minutes = Int(route.expectedTravelTime / 60)
+        let seconds: TimeInterval
+        if let route {
+            seconds = route.expectedTravelTime
+        } else if let estimatedWalkingSeconds {
+            seconds = estimatedWalkingSeconds
+        } else {
+            return "--"
+        }
+
+        let minutes = Int(seconds / 60)
         guard minutes >= 60 else { return "\(minutes) min" }
         let h = minutes / 60
         let m = minutes % 60
@@ -64,17 +92,29 @@ final class DirectionViewModel: ObservableObject {
     }
 
     var distanceText: String {
-        guard let route else { return "--" }
-        let m = route.distance
+        let m: CLLocationDistance
+        if let route {
+            m = route.distance
+        } else if let straightLineDistanceMeters {
+            m = straightLineDistanceMeters
+        } else {
+            return "--"
+        }
         return m >= 1000 ? String(format: "%.1f km", m / 1000) : "\(Int(m.rounded())) m"
     }
 
     var etaText: String {
-        guard let route else { return "--" }
-        let eta = Date().addingTimeInterval(route.expectedTravelTime)
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: eta)
+        let seconds: TimeInterval
+        if let route {
+            seconds = route.expectedTravelTime
+        } else if let estimatedWalkingSeconds {
+            seconds = estimatedWalkingSeconds
+        } else {
+            return "--"
+        }
+
+        let eta = Date.now.addingTimeInterval(seconds)
+        return eta.formatted(date: .omitted, time: .shortened)
     }
 
     // MARK: - Actions

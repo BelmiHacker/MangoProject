@@ -93,10 +93,14 @@ struct ExplorePageView: View {
             }
         }
         .fullScreenCover(item: $selectedPlace) { place in
-            DirectionPageView(place: place, locationManager: viewModel.locationManager)
+            DirectionPageView(
+                place: place,
+                locationManager: viewModel.locationManager,
+                onFinished: onBack
+            )
         }
         .navigationDestination(item: $detailedPlace) { place in
-            RestaurantDetailView(place: place)
+            RestaurantDetailView(place: place, onFinished: onBack)
                 .navigationBarBackButtonHidden(true)
         }
         .sheet(isPresented: $isSheetPresented) {
