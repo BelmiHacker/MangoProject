@@ -13,13 +13,16 @@ import MapKit
 /// Currently populated with mock/placeholder data — no networking, no persistence.
 ///
 /// This is the seam where future business logic connects:
-/// - `userPoints` will later update after NFC scans (via a PointsService or similar)
 /// - `recommendedPlaces` will later be populated by an API/database call
 /// - `recentSearches` will later be populated from user search history
 /// - `userName` will later come from a real `UserProfile`
 ///
 /// Views stay "dumb" — they only read these published properties and
 /// call the exposed methods; they never contain this logic themselves.
+///
+/// Points are intentionally NOT owned here — they live in `UserPointsStore`,
+/// shared across the Home and Points tabs, so a single instance is the
+/// source of truth instead of each screen keeping its own counter.
 @Observable
 final class MainViewModel {
 
@@ -27,12 +30,6 @@ final class MainViewModel {
 
     /// Placeholder until UserProfile is wired in.
     var userName: String = "Muthi"
-
-    // MARK: - Points
-
-    /// Placeholder until UserProfile gains a `points` field (or equivalent),
-    /// updated later via NFC scan logic.
-    var userPoints: Int = 67
 
     // MARK: - Restaurant sections
 

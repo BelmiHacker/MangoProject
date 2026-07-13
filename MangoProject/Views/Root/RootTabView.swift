@@ -2,12 +2,13 @@ import SwiftUI
 
 struct RootTabView: View {
     @State private var selectedTab: RootTab = .home
+    @State private var pointsStore = UserPointsStore()
 
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab(value: RootTab.home) {
                 NavigationStack {
-                    MainView(onNavigateToPoints: { selectedTab = .points })
+                    MainView(pointsStore: pointsStore, onNavigateToPoints: { selectedTab = .points })
                 }
             } label: {
                 Label(RootTab.home.label, systemImage: RootTab.home.icon)
@@ -32,7 +33,7 @@ struct RootTabView: View {
 
             Tab(value: RootTab.points) {
                 NavigationStack {
-                    PointsPageView()
+                    PointsPageView(pointsStore: pointsStore)
                 }
             } label: {
                 Label(RootTab.points.label, systemImage: RootTab.points.icon)
