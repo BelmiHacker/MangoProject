@@ -9,12 +9,17 @@ struct ExplorePlaceCard: View {
     let place: NearbyFoodPlace
     var onClose: () -> Void
     var onDirections: () -> Void
+    var onSelect: () -> Void
 
     @State private var selectedPhoto: SelectedPhoto?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             placeHeader
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onSelect()
+                }
             directionsButton
             photoStrip
         }
