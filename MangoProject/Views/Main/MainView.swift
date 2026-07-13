@@ -49,7 +49,7 @@ struct MainView: View {
                     }
                 )
 
-                PointsCardView(
+                PointsSummaryCard(
                     points: pointsStore.points,
                     onTapToCollect: { isNFCScanPresented = true }
                 )

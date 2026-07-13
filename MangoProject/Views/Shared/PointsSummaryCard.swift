@@ -1,16 +1,14 @@
 //
-//  PointsCardView.swift
+//  PointsSummaryCard.swift
 //  MangoProject
-//
-//  Created by Muthiara Putri Aliyu on 09/07/26.
 //
 
 import SwiftUI
 
-/// The "My Points" banner shown near the top of MainView.
-/// Purely presentational — the points value is passed in, not computed here.
-/// Will later reflect real-time updates after NFC scans via MainViewModel.
-struct PointsCardView: View {
+/// The "My Points" banner — shared between MainView (Home) and PointsPageView
+/// so the card renders at the same size/position on both screens instead of
+/// each screen keeping its own copy that could drift apart.
+struct PointsSummaryCard: View {
     let points: Int
     var onTapToCollect: () -> Void = {}
 
@@ -34,7 +32,7 @@ struct PointsCardView: View {
 
             Spacer()
 
-            Button(action: { onTapToCollect() }) {
+            Button(action: onTapToCollect) {
                 HStack(spacing: 6) {
                     Image(systemName: "wave.3.right")
                         .font(.system(size: 14, weight: .semibold))
@@ -57,7 +55,7 @@ struct PointsCardView: View {
 }
 
 #Preview {
-    PointsCardView(points: 67)
+    PointsSummaryCard(points: 67)
         .padding()
         .background(Color("AppBackground"))
 }
