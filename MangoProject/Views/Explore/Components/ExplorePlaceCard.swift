@@ -104,34 +104,36 @@ private extension ExplorePlaceCard {
 
     var photoStrip: some View {
         let images = RestaurantPhotoAsset.availableImages(for: place.name)
+        let thumbnailSize = CGSize(width: 96, height: 72)
 
-        return HStack(spacing: 8) {
-            if images.isEmpty {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.primary.opacity(0.08))
-                    .frame(height: 68)
-                    .frame(maxWidth: .infinity)
-                    .overlay(
-                        Image(systemName: RestaurantPhotoAsset.categoryIcon(for: place.category))
-                            .font(.system(size: 18))
-                            .foregroundStyle(.tertiary)
-                    )
-            } else {
-                ForEach(Array(images.prefix(4).enumerated()), id: \.offset) { index, uiImage in
-                    Button {
-                        selectedPhoto = SelectedPhoto(image: uiImage)
-                    } label: {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: 68)
-                            .frame(maxWidth: .infinity)
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                if images.isEmpty {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.primary.opacity(0.08))
+                        .frame(width: thumbnailSize.width, height: thumbnailSize.height)
+                        .overlay(
+                            Image(systemName: RestaurantPhotoAsset.categoryIcon(for: place.category))
+                                .font(.system(size: 18))
+                                .foregroundStyle(.tertiary)
+                        )
+                } else {
+                    ForEach(Array(images.enumerated()), id: \.offset) { index, uiImage in
+                        Button {
+                            selectedPhoto = SelectedPhoto(image: uiImage)
+                        } label: {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: thumbnailSize.width, height: thumbnailSize.height)
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Photo \(index + 1) of \(place.name)")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Photo \(index + 1) of \(place.name)")
                 }
             }
         }
+        .frame(height: thumbnailSize.height)
     }
 }
