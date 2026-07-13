@@ -53,7 +53,7 @@ struct RestaurantDetailView: View {
                             Text(viewModel.resolvedAddress.isEmpty
                                  ? (place.address.isEmpty ? "The Breeze, BSD City, Tangerang" : place.address)
                                  : viewModel.resolvedAddress)
-                                .font(.caption)
+                                .font(Typography.bodySecondary)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)
                         }
@@ -64,7 +64,7 @@ struct RestaurantDetailView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Text("07:00 – 23:00")
-                                .font(.caption)
+                                .font(Typography.bodySecondary)
                                 .foregroundStyle(.secondary)
                         }
 

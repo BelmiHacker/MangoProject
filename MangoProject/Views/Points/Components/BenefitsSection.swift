@@ -19,12 +19,6 @@ struct Benefit: Identifiable {
     ]
 }
 
-private let tierColors: [Color] = [
-    Color("Accent") .opacity(0.5),  // Free Coffee — medium green
-    Color("Accent") .opacity(0.75), // 10% Off — rich green
-    Color("Accent") .opacity(1.1), // Free Dessert — deep forest green
-]
-
 struct BenefitsSection: View {
     let benefits: [Benefit]
     let points: Int
@@ -37,11 +31,10 @@ struct BenefitsSection: View {
                 .foregroundStyle(Color(.textPrimary))
 
             HStack(spacing: 10) {
-                ForEach(Array(benefits.enumerated()), id: \.element.id) { index, benefit in
+                ForEach(benefits) { benefit in
                     BenefitCard(
                         benefit: benefit,
                         isUnlocked: points >= benefit.pointsCost,
-                        cardColor: tierColors[min(index, tierColors.count - 1)],
                         onRedeem: { onRedeem(benefit) }
                     )
                 }
@@ -53,8 +46,8 @@ struct BenefitsSection: View {
 private struct BenefitCard: View {
     let benefit: Benefit
     let isUnlocked: Bool
-    let cardColor: Color
     var onRedeem: () -> Void = {}
+    private let cardColor = Color("Accent")
 
     var body: some View {
         Button(action: onRedeem) {

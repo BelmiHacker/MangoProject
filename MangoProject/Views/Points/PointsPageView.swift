@@ -14,7 +14,7 @@ struct PointsPageView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 headerText
-                MyPointsCard(
+                PointsSummaryCard(
                     points: pointsStore.points,
                     onTapToCollect: { isNFCScanPresented = true }
                 )
@@ -25,7 +25,7 @@ struct PointsPageView: View {
                 )
                 RecentActivitySection(items: ActivityItem.samples)
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, Spacing.medium)
             .padding(.top, 16)
             .padding(.bottom, 40)
         }
@@ -54,12 +54,12 @@ struct PointsPageView: View {
     }
 
     private var headerText: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
             Text("Halal Rewards")
                 .font(Typography.screenTitle)
                 .foregroundStyle(Color(.textPrimary))
 
-            Text("Earn points by tapping NFC at participating Halal Restaurant")
+            Text("Earn points by tapping NFC at halal restaurants.")
                 .font(Typography.bodySecondary)
                 .foregroundStyle(Color("TextSecondary"))
         }

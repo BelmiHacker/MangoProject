@@ -10,36 +10,30 @@ struct HalalCertificateCard: View {
                 HStack(spacing: 4) {
                     Image(systemName: "checkmark")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color("Accent"))
                     Text("Certified Halal")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(Color("Accent"))
                 }
                 Text("Verified by MUI")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .font(Typography.bodySecondary)
+                    .foregroundStyle(Color("Accent").opacity(0.85))
                     .padding(.bottom, 4)
                 Text("ID: \(certificateNumber ?? "0123456789")")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .font(Typography.bodySecondary)
+                    .foregroundStyle(Color("Accent").opacity(0.8))
                 Text("Valid: \(certificateIssueDate ?? "15 July 2025")")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .font(Typography.bodySecondary)
+                    .foregroundStyle(Color("Accent").opacity(0.8))
             }
             Spacer()
-            HalalIndonesiaLogo()
+            Image("HalalSign")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 96, height: 96)
         }
         .padding(12)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 0.08, green: 0.12, blue: 0.36),
-                    Color(red: 0.28, green: 0.06, blue: 0.50)
-                ]),
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        )
+        .background(Color("HalalCertBackground"))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
