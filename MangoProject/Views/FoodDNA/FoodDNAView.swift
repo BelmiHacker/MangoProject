@@ -43,10 +43,11 @@ struct FoodDNAView: View {
                 await viewModel.analyzeMenu(image: image)
             }
         }
-        .sheet(isPresented: $isShowingCamera) {
+        .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { image in
                 Task { await viewModel.analyzeMenu(image: image) }
             }
+            .ignoresSafeArea()
         }
     }
 
@@ -59,7 +60,7 @@ struct FoodDNAView: View {
                 viewModel.resetScan()
             })
         } else if viewModel.hasScannedMenu {
-            ScannedMenuImageView(onRetryTapped: {
+            ScannedMenuImageView(image: viewModel.scannedImage, onRetryTapped: {
                 viewModel.resetScan()
             })
 
