@@ -1,0 +1,41 @@
+{
+  "version": 3,
+  "skills": {
+    "swiftui-pro": {
+      "source": "twostraws/swiftui-agent-skill",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/twostraws/swiftui-agent-skill.git",
+      "skillPath": "swiftui-pro/SKILL.md",
+      "skillFolderHash": "09b8fff9743cfc94eea3ada3727e3ec369ff10fb",
+      "installedAt": "2026-07-10T05:44:45.033Z",
+      "updatedAt": "2026-07-10T05:44:45.033Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "eb6a23305aea6e340d14b9de3766e721f9f4861b",
+      "installedAt": "2026-07-10T05:44:48.264Z",
+      "updatedAt": "2026-07-10T05:44:48.264Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "antigravity",
+    "antigravity-cli",
+    "cline",
+    "codex",
+    "cursor",
+    "deepagents",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-code-cli",
+    "opencode",
+    "warp",
+    "zed"
+  ]
+}
