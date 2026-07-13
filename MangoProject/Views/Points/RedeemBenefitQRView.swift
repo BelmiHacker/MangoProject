@@ -52,7 +52,6 @@ struct RedeemBenefitQRView: View {
                 .padding(.top, 16)
                 .padding(.trailing, 20)
         }
-        .preferredColorScheme(.light)
     }
 
     // MARK: - Header

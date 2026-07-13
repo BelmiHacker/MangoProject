@@ -45,7 +45,6 @@ struct CollectPointsMethodView: View {
                 .padding(.top, 16)
                 .padding(.trailing, 20)
         }
-        .preferredColorScheme(.light)
         .fullScreenCover(isPresented: $isQRScanPresented) {
             QRScannerSheet(
                 onCancel: { isQRScanPresented = false },
