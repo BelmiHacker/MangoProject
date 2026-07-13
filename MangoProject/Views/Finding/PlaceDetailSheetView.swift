@@ -35,7 +35,6 @@ struct PlaceDetailSheetView: View {
         }
         .scrollIndicators(.hidden)
         .background(sheetBackground)
-        .preferredColorScheme(.dark)
     }
 }
 

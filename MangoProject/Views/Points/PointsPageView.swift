@@ -30,7 +30,6 @@ struct PointsPageView: View {
             .padding(.bottom, 40)
         }
         .background(Color("AppBackground").ignoresSafeArea())
-        .preferredColorScheme(.light)
         .fullScreenCover(isPresented: $isCollectMethodPresented) {
             CollectPointsMethodView(
                 onCancel: { isCollectMethodPresented = false },
