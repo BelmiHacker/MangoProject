@@ -7,7 +7,7 @@ import SwiftUI
 
 struct PointsPageView: View {
     var pointsStore: UserPointsStore = UserPointsStore()
-    @State private var isNFCScanPresented = false
+    @State private var isQRScanPresented = false
     @State private var redeemingBenefit: Benefit?
 
     var body: some View {
@@ -16,7 +16,7 @@ struct PointsPageView: View {
                 headerText
                 PointsSummaryCard(
                     points: pointsStore.points,
-                    onTapToCollect: { isNFCScanPresented = true }
+                    onTapToCollect: { isQRScanPresented = true }
                 )
                 BenefitsSection(
                     benefits: Benefit.samples,
@@ -30,20 +30,14 @@ struct PointsPageView: View {
             .padding(.bottom, 40)
         }
         .background(Color("AppBackground").ignoresSafeArea())
-        .sheet(isPresented: $isNFCScanPresented) {
-            NFCScanSheet(
-                onCancel: { isNFCScanPresented = false },
-                onSuccess: {
+        .fullScreenCover(isPresented: $isQRScanPresented) {
+            QRScannerSheet(
+                onCancel: { isQRScanPresented = false },
+                onScan: { _ in
                     pointsStore.points += 500
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                        isNFCScanPresented = false
-                    }
+                    isQRScanPresented = false
                 }
             )
-            .presentationDetents([.height(480)])
-            .presentationDragIndicator(.hidden)
-            .presentationCornerRadius(28)
-            .presentationBackground(.clear)
         }
         .fullScreenCover(item: $redeemingBenefit) { benefit in
             RedeemBenefitQRView(
@@ -59,7 +53,7 @@ struct PointsPageView: View {
                 .font(Typography.screenTitle)
                 .foregroundStyle(Color(.textPrimary))
 
-            Text("Earn points by tapping NFC at halal restaurants.")
+            Text("Earn points by scanning QR at halal restaurants.")
                 .font(Typography.bodySecondary)
                 .foregroundStyle(Color("TextSecondary"))
         }

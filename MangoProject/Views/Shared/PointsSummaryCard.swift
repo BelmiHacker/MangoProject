@@ -34,9 +34,9 @@ struct PointsSummaryCard: View {
 
             Button(action: onTapToCollect) {
                 HStack(spacing: 6) {
-                    Image(systemName: "wave.3.right")
+                    Image(systemName: "qrcode.viewfinder")
                         .font(.system(size: 14, weight: .semibold))
-                    Text("Tap To Collect")
+                    Text("Scan to Collect")
                         .font(.system(size: 15, weight: .semibold))
                 }
                 .foregroundStyle(Color(red: 0.11, green: 0.38, blue: 0.29))
